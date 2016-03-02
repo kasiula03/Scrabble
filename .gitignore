@@ -4,6 +4,16 @@
 *.o
 *.obj
 *.opendb
+*.idb
+*.pdb
+*.vcxproj
+*.vcxproj.filters
+*.sdf
+*.sln
+*.ilk
+*.log
+*.tlog
+*.lastbuildstate
 
 # Precompiled Headers
 *.gch
