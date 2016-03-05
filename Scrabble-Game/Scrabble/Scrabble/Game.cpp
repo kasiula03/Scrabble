@@ -1,6 +1,6 @@
 #include "Game.h"
 #include <iostream>
-
+#include <string>
 using namespace std;
 
 Font Game::font;
@@ -75,17 +75,31 @@ void Game::Menu()
 {
 	bool menu = true;
 	Event event;
-	
+	string str;
 	RenderWindow window(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
 	
 
-	Text tekst;
-	tekst.setFont(font);
-	tekst.setString("ddd");
-	tekst.setPosition(50, 50);
+	Text texts[5];
+	texts[0].setFont(font);
+	texts[1].setFont(font);
+	texts[1].setPosition(window.getSize().x / 2.5, 10);
+	//texts[1].setString("Jestes niezalogowany");
+	//tekst.setString("ddd");
+	texts[0].setPosition(10, 10);
+	
+	if (client.CheckIfConnected())
+	{
+		texts[0].setString("Gra w trybie online");
+		client.Send("Polaczylem");
+	}
+	else
+	{
+		texts[0].setString("Gra w trybie offline");
+		MessageBox(NULL, "Nie udalo polaczyc sie z serwerem, grasz w trybie offline", "ERROR", NULL);
+	}
 	while (menu)
 	{
-
+		
 		while (window.pollEvent(event))
 		{
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -93,8 +107,27 @@ void Game::Menu()
 				menu = false;
 				state = END;
 			}
+			if (event.type == sf::Event::TextEntered)
+			{
+				// Handle ASCII characters only
+				if (event.text.unicode < 128)
+				{
+					str += static_cast<char>(event.text.unicode);
+					texts[1].setString(str);
+				}
+			}
+			if (Keyboard::isKeyPressed(Keyboard::BackSpace) && str.length() > 0)
+			{
+				str.erase(str.length() - 1, str.length());
+				texts[1].setString(str.c_str());
+			}
+
 		}
-		window.draw(tekst);
+		//window.clear(Color(200, 200, 200));
+		
+		window.clear();
+		window.draw(texts[0]);
+		window.draw(texts[1]);
 		window.display();
 	}
 	
@@ -116,6 +149,7 @@ void Game::Play()
 				state = END;
 			}
 		}
+	
 		window.display();
 	}
 }

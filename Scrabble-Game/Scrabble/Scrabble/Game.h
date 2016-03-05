@@ -1,6 +1,7 @@
 #pragma once
 #include "Word.h"
 #include <Windows.h>
+#include "Client.h"
 class Game
 {
 public:
@@ -9,6 +10,8 @@ public:
 private:
 	enum GameState { MENU, GAME, GAME_OVER, END };
 	GameState state;
+
+	Client client;
 
 	static Font font;
 
