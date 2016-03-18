@@ -19,14 +19,14 @@ int Letter::GetPoints()
 
 Letter::Letter(char sign, int points)
 {
-	string patchOfFile = "data//Graphs//Letters//Letter_" + string(1,sign) + ".png";
+	//string patchOfFile = "data//Graphs//Letters//Letter_" + string(1,sign) + ".png";
 	SetSign(sign);
 	SetPoints(points);
 	
-	if (!texture.loadFromFile(patchOfFile))
-	{
-		cout << "Nie wczytano tekstury!" << endl;
-	}
+	//if (!texture.loadFromFile(patchOfFile))
+	//{
+		//cout << "Nie wczytano tekstury!" << endl;
+	//}
 	sprite.setTexture(texture);
 }
 Letter::Letter()

@@ -1,12 +1,15 @@
 #include "Game.h"
 #include <iostream>
 #include <string>
+
 using namespace std;
 
 Font Game::font;
 
+
 Game::Game(int a)
 {
+	client = new Client();
 	SetLetters();
 	state = MENU;
 	if (!font.loadFromFile("data/Mecha.ttf"))
@@ -14,7 +17,15 @@ Game::Game(int a)
 		MessageBox(NULL, "Fond not found", "ERROR", NULL);
 		return;
 	}
-	RunGame();
+
+	
+	gameThread = new thread(*this); 
+
+	clientThread = new thread(*client); 
+	//thread watek1(*client); // Watek klienta
+	if (clientThread->joinable())
+		clientThread->join();
+
 	
 }
 
@@ -66,6 +77,9 @@ void Game::RunGame()
 		case GameState::GAME:
 			Play();
 			break;
+		case GameState::AUTHORIZATION:
+			Authorization();
+			break;
 		}
 
 	}
@@ -80,34 +94,80 @@ void Game::Menu()
 	
 
 	Text texts[5];
-	texts[0].setFont(font);
-	texts[1].setFont(font);
-	texts[1].setPosition(window.getSize().x / 2.5, 10);
-	//texts[1].setString("Jestes niezalogowany");
-	//tekst.setString("ddd");
-	texts[0].setPosition(10, 10);
+	Text txtIfOffline = setText("Kliknij tutaj aby sprobwac \npolaczyc sie z serwerem",10,45);
+
+	texts[1] = setText("Scrabble", window.getSize().x / 2.5, 10);
+	texts[1].setScale(1.5, 1.5);
+	texts[2] = setText("Zaloguj sie", 20, 200);
 	
-	if (client.CheckIfConnected())
+
+	if (client->CheckIfConnected())
 	{
-		texts[0].setString("Gra w trybie online");
-		client.Send("Polaczylem");
+		online = true;
+		texts[0] = setText("Gra w trybie online",10,10);
+		client->Send("Polaczylem");
+		//std::thread watek1(*client);
+		
 	}
 	else
 	{
-		texts[0].setString("Gra w trybie offline");
+		online = false;
+		texts[0] = setText("Gra w trybie offline", 10, 10);
 		MessageBox(NULL, "Nie udalo polaczyc sie z serwerem, grasz w trybie offline", "ERROR", NULL);
 	}
 	while (menu)
 	{
-		
+		Vector2f mouse(Mouse::getPosition());
 		while (window.pollEvent(event))
 		{
+
+			Vector2f pos(texts[2].getGlobalBounds().left, texts[2].getGlobalBounds().top);
+			Vector2f size(texts[2].getGlobalBounds().width, texts[2].getGlobalBounds().height);
+			FloatRect newRect(static_cast < Vector2f >(window.mapCoordsToPixel(pos)), static_cast < Vector2f >(window.mapCoordsToPixel(size)));
+
+			Vector2f pos2(txtIfOffline.getGlobalBounds().left, txtIfOffline.getGlobalBounds().top);
+			Vector2f size2(txtIfOffline.getGlobalBounds().width, txtIfOffline.getGlobalBounds().height);
+			FloatRect newRect2(static_cast < Vector2f >(window.mapCoordsToPixel(pos2)), static_cast < Vector2f >(window.mapCoordsToPixel(size2)));
+
+
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
 			{
 				menu = false;
 				state = END;
 			}
-			if (event.type == sf::Event::TextEntered)
+			if (newRect.contains(static_cast <Vector2f>(Mouse::getPosition(window))))
+			{
+				texts[2].setColor(Color::Cyan);
+				if (Mouse::isButtonPressed(Mouse::Left))
+				{
+					state = AUTHORIZATION;
+					menu = false;
+				}
+
+			}
+			else texts[2].setColor(Color::White);
+			if (newRect2.contains(static_cast <Vector2f>(Mouse::getPosition(window))))
+			{
+				txtIfOffline.setColor(Color::Cyan);
+				if (Mouse::isButtonPressed(Mouse::Left))
+				{
+					client = new Client();
+					if (client->CheckIfConnected())
+					{
+						online = true;
+						texts[0] = setText("Gra w trybie online", 10, 10);
+						
+					}
+					else
+					{
+						online = false;
+						texts[0] = setText("Gra w trybie offline", 10, 10);
+						MessageBox(NULL, "Nie udalo polaczyc sie z serwerem", "ERROR", NULL);
+					}
+				}
+			}
+			else txtIfOffline.setColor(Color::White);
+			/*if (event.type == sf::Event::TextEntered)
 			{
 				// Handle ASCII characters only
 				if (event.text.unicode < 128)
@@ -120,14 +180,17 @@ void Game::Menu()
 			{
 				str.erase(str.length() - 1, str.length());
 				texts[1].setString(str.c_str());
-			}
+			}*/ 
 
 		}
+		
 		//window.clear(Color(200, 200, 200));
 		
-		window.clear();
+		window.clear(Color(50,50,50,255));
 		window.draw(texts[0]);
 		window.draw(texts[1]);
+		window.draw(texts[2]);
+		if (!online) window.draw(txtIfOffline);
 		window.display();
 	}
 	
@@ -150,6 +213,50 @@ void Game::Play()
 			}
 		}
 	
+		window.clear(Color(50, 50, 50, 255));
 		window.display();
 	}
+}
+
+void Game::Authorization()
+{
+	RenderWindow window(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
+	bool opened = true;
+	while (opened)
+	{
+		Text txts[5];
+		txts[0] = setText("Zaloguj sie", 100, 100);
+		
+		txts[1] = setText("Login: ", 70, 150);
+		txts[2] = setText("Haslo: ", 70, 200);
+		RectangleShape rec;
+	
+		rec.setSize(Vector2f(200, 200));
+		rec.setPosition(90, 100);
+		rec.setFillColor(Color(0,0,0,0));
+		rec.setOutlineThickness(2);
+		rec.setOutlineColor(Color::White);
+
+		if (Keyboard::isKeyPressed(Keyboard::Escape))
+		{
+			opened = false;
+			state = MENU;
+		}
+
+		window.clear(Color(50, 50, 50, 255));
+		window.draw(txts[0]);
+		window.draw(txts[1]);
+		window.draw(txts[2]);
+		//window.draw(rec);
+		window.display();
+	}
+}
+
+Text Game::setText(string inscription, int pos_x, int pos_y)
+{
+	Text temp;
+	temp.setFont(font);
+	temp.setString(inscription);
+	temp.setPosition(pos_x, pos_y);
+	return temp;
 }

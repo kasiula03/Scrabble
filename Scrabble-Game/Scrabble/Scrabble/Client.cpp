@@ -28,8 +28,10 @@ Client::Client()
 	//Send();
 }
 
+
 bool Client::ConnectToServer()
 {
+
 	memset(&service, 0, sizeof(service));
 	service.sin_family = AF_INET;
 	service.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -39,6 +41,7 @@ bool Client::ConnectToServer()
 	{
 		connected = false;
 		cout << "Failed to connect! " << endl;
+		
 		WSACleanup();
 		return false;
 	}
@@ -55,16 +58,14 @@ bool Client::CheckIfConnected()
 void Client::Send(string date)
 {
 	int bytesSent;
-	int bytesRecv = SOCKET_ERROR;
 	
 	char recvbuf[32] = "";
 	int size = date.length();
-	 //Wysylamy napis do serwera
-	//cout << "Bytes sent: " << bytesSent << endl;
+	
 	int i = 0;
-	char * sendbuf = new char[size];
+	char * sendbuf = new char[size]; // to wysylamy
 	strcpy(sendbuf, date.c_str());
-	//cin >> sendbuf;
+	
 	bytesSent = send(mainSocket, sendbuf, size, 0);
 		/*while (bytesRecv == SOCKET_ERROR)
 		{
@@ -82,4 +83,42 @@ void Client::Send(string date)
 			cout << "Received text: " << recvbuf << endl;
 		}*/
 	
+}
+void Client::Receive()
+{
+	
+	int bytesRecv = SOCKET_ERROR;
+	char recvbuf[512];
+	while (bytesRecv == SOCKET_ERROR)
+	{
+		bytesRecv = recv(mainSocket, recvbuf, sizeof(recvbuf),0); //przy zmianie rozmiaru na np 10 wykona sie to 5 razy
+
+		if (bytesRecv == 0 || bytesRecv == WSAECONNRESET)
+		{
+			cout << "Connection closed" << endl;
+			break;
+		}
+		if (bytesRecv < 0)
+			break;
+
+		cout << "Bytes received: " << bytesRecv << endl;
+		cout << "Received text: " << recvbuf << endl;
+	}
+	
+	
+}
+
+void Client::operator()()
+{
+	while (true)
+	{
+		if (this->CheckIfConnected())
+		{
+			Receive();
+		}
+		else
+		{
+			cout << CheckIfConnected() << endl;
+		}
+	}
 }
