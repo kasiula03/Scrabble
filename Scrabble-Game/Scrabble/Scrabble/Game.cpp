@@ -20,11 +20,7 @@ Game::Game(int a)
 
 	
 	gameThread = new thread(*this); 
-
-	clientThread = new thread(*client); 
-	//thread watek1(*client); // Watek klienta
-	if (clientThread->joinable())
-		clientThread->join();
+	gameThread->join();
 
 	
 }
@@ -90,52 +86,39 @@ void Game::Menu()
 	bool menu = true;
 	Event event;
 	string str;
-	RenderWindow window(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
 	
+	Inatialize();
 
-	Text texts[5];
-	Text txtIfOffline = setText("Kliknij tutaj aby sprobwac \npolaczyc sie z serwerem",10,45);
-
-	texts[1] = setText("Scrabble", window.getSize().x / 2.5, 10);
-	texts[1].setScale(1.5, 1.5);
-	texts[2] = setText("Zaloguj sie", 20, 200);
 	
-
-	if (client->CheckIfConnected())
-	{
-		online = true;
-		texts[0] = setText("Gra w trybie online",10,10);
-		client->Send("Polaczylem");
-		//std::thread watek1(*client);
-		
-	}
-	else
-	{
-		online = false;
-		texts[0] = setText("Gra w trybie offline", 10, 10);
-		MessageBox(NULL, "Nie udalo polaczyc sie z serwerem, grasz w trybie offline", "ERROR", NULL);
-	}
 	while (menu)
 	{
 		Vector2f mouse(Mouse::getPosition());
-		while (window.pollEvent(event))
+		while (window->pollEvent(event))
 		{
 
 			Vector2f pos(texts[2].getGlobalBounds().left, texts[2].getGlobalBounds().top);
 			Vector2f size(texts[2].getGlobalBounds().width, texts[2].getGlobalBounds().height);
-			FloatRect newRect(static_cast < Vector2f >(window.mapCoordsToPixel(pos)), static_cast < Vector2f >(window.mapCoordsToPixel(size)));
+			FloatRect newRect(static_cast < Vector2f >(window->mapCoordsToPixel(pos)), static_cast < Vector2f >(window->mapCoordsToPixel(size)));
 
-			Vector2f pos2(txtIfOffline.getGlobalBounds().left, txtIfOffline.getGlobalBounds().top);
-			Vector2f size2(txtIfOffline.getGlobalBounds().width, txtIfOffline.getGlobalBounds().height);
-			FloatRect newRect2(static_cast < Vector2f >(window.mapCoordsToPixel(pos2)), static_cast < Vector2f >(window.mapCoordsToPixel(size2)));
-
+			Vector2f pos2(texts[3].getGlobalBounds().left, texts[3].getGlobalBounds().top);
+			Vector2f size2(texts[3].getGlobalBounds().width, texts[3].getGlobalBounds().height);
+			FloatRect newRect2(static_cast < Vector2f >(window->mapCoordsToPixel(pos2)), static_cast < Vector2f >(window->mapCoordsToPixel(size2)));
 
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
 			{
 				menu = false;
 				state = END;
 			}
-			if (newRect.contains(static_cast <Vector2f>(Mouse::getPosition(window))))
+
+			if (Keyboard::isKeyPressed(Keyboard::B))
+			{
+				menu = false;
+				window->close();
+				state = GAME;
+			}
+
+			//set text color when mouse is coliding and change state to Authorization
+			if (newRect.contains(static_cast <Vector2f>(Mouse::getPosition(*window))))
 			{
 				texts[2].setColor(Color::Cyan);
 				if (Mouse::isButtonPressed(Mouse::Left))
@@ -146,17 +129,26 @@ void Game::Menu()
 
 			}
 			else texts[2].setColor(Color::White);
-			if (newRect2.contains(static_cast <Vector2f>(Mouse::getPosition(window))))
+
+			// Try reconnect to server
+			if (newRect2.contains(static_cast <Vector2f>(Mouse::getPosition(*window))))
 			{
-				txtIfOffline.setColor(Color::Cyan);
+				texts[3].setColor(Color::Cyan);
 				if (Mouse::isButtonPressed(Mouse::Left))
 				{
-					client = new Client();
+					
+					if (client->ConnectToServer())
+					{
+						cout << "Polaczylem" << endl;
+
+						clientThread = new thread(*client);
+					
+					}
 					if (client->CheckIfConnected())
 					{
 						online = true;
 						texts[0] = setText("Gra w trybie online", 10, 10);
-						
+						client->connected = true;
 					}
 					else
 					{
@@ -166,7 +158,7 @@ void Game::Menu()
 					}
 				}
 			}
-			else txtIfOffline.setColor(Color::White);
+			else texts[3].setColor(Color::White);
 			/*if (event.type == sf::Event::TextEntered)
 			{
 				// Handle ASCII characters only
@@ -184,38 +176,16 @@ void Game::Menu()
 
 		}
 		
-		//window.clear(Color(200, 200, 200));
-		
-		window.clear(Color(50,50,50,255));
-		window.draw(texts[0]);
-		window.draw(texts[1]);
-		window.draw(texts[2]);
-		if (!online) window.draw(txtIfOffline);
-		window.display();
+		Display();
 	}
 	
 }
 
 void Game::Play()
 {
-	RenderWindow window(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
-	bool play = true;
-	Event event;
-
-	while (play)
-	{
-		while (window.pollEvent(event))
-		{
-			if (Keyboard::isKeyPressed(Keyboard::Escape))
-			{
-				play = false;
-				state = END;
-			}
-		}
-	
-		window.clear(Color(50, 50, 50, 255));
-		window.display();
-	}
+	Start();
+		
+	state = END;
 }
 
 void Game::Authorization()
@@ -250,6 +220,44 @@ void Game::Authorization()
 		//window.draw(rec);
 		window.display();
 	}
+}
+
+void Game::Inatialize()
+{
+	window = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
+
+
+	texts[3] = setText("Kliknij tutaj aby sprobwac \npolaczyc sie z serwerem", 10, 45);
+
+	texts[1] = setText("Scrabble", window->getSize().x / 2.5, 10);
+	texts[1].setScale(1.5, 1.5);
+	texts[2] = setText("Zaloguj sie", 20, 200);
+
+	if (client->CheckIfConnected())
+	{
+		online = true;
+		texts[0] = setText("Gra w trybie online", 10, 10);
+		client->Send("Polaczylem");
+		clientThread = new thread(*client);
+		//std::thread watek1(*client);
+
+	}
+	else
+	{
+		online = false;
+		texts[0] = setText("Gra w trybie offline", 10, 10);
+		MessageBox(NULL, "Nie udalo polaczyc sie z serwerem, grasz w trybie offline", "ERROR", NULL);
+	}
+}
+
+void Game::Display()
+{
+	window->clear(Color(50, 50, 50, 255));
+	window->draw(texts[0]);
+	window->draw(texts[1]);
+	window->draw(texts[2]);
+	if (!online) window->draw(texts[3]);
+	window->display();
 }
 
 Text Game::setText(string inscription, int pos_x, int pos_y)

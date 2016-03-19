@@ -5,23 +5,12 @@
 #include <iostream>
 //#include <WinSock2.h>
 
+bool Client::connected;
 
 using namespace std;
 
 Client::Client()
 {
-	WSADATA wsaData;
-
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != NO_ERROR)
-		cout << "Initialization error!" << endl;
-	mainSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (mainSocket == INVALID_SOCKET)
-	{
-		cout << "Error creating socket! \t" << WSAGetLastError() << endl;
-		WSACleanup();
-		return;
-	}
 
 	if (!ConnectToServer()) return;
 
@@ -31,7 +20,19 @@ Client::Client()
 
 bool Client::ConnectToServer()
 {
+	WSADATA wsaData;
 
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (mainSocket == INVALID_SOCKET)
+		if (result != NO_ERROR)
+			cout << "Initialization error!" << endl;
+	mainSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (mainSocket == INVALID_SOCKET)
+	{
+		cout << "Error creating socket! \t" << WSAGetLastError() << endl;
+		WSACleanup();
+		return false;
+	}
 	memset(&service, 0, sizeof(service));
 	service.sin_family = AF_INET;
 	service.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -115,10 +116,6 @@ void Client::operator()()
 		if (this->CheckIfConnected())
 		{
 			Receive();
-		}
-		else
-		{
-			cout << CheckIfConnected() << endl;
 		}
 	}
 }

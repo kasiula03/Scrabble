@@ -2,12 +2,13 @@
 #include "Word.h"
 #include <Windows.h>
 #include "Client.h"
+#include "Play.h"
 #include <thread>
-class Game
+class Game : public Play
 {
 public:
 	Game(int);
-	void operator()()
+	void operator()() // thread function
 	{
 		RunGame();
 	}
@@ -23,15 +24,20 @@ private:
 	static Font font;
 	bool online;
 
+	RenderWindow * window;
+
+	Text texts[5];
+
 	void SetLetters();
 
 	//main game functions
+	void Inatialize();
+
 	void RunGame();
 	void Menu();
 	void Play();
 	void Authorization();
-
-	
+	void Display();
 
 	//helpfull functions
 
