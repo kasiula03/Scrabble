@@ -26,7 +26,9 @@ private:
 
 	RenderWindow * window;
 
-	Text texts[5];
+	Sprite menuBackground;
+	Texture menuTexture;
+	Text texts[7];
 
 	void SetLetters();
 

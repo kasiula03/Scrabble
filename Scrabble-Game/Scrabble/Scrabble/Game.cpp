@@ -12,13 +12,17 @@ Game::Game(int a)
 	client = new Client();
 	SetLetters();
 	state = MENU;
-	if (!font.loadFromFile("data/Mecha.ttf"))
+	if (!font.loadFromFile("data/WorkSans-Black.otf"))
 	{
 		MessageBox(NULL, "Fond not found", "ERROR", NULL);
 		return;
 	}
+	if (!menuTexture.loadFromFile("data//Graphs//menuBackground2.png"))
+	{
+		std::cout << "Nie wczytano tekstury!" << std::endl;
+	}
+	menuBackground.setTexture(menuTexture);
 
-	
 	gameThread = new thread(*this); 
 	gameThread->join();
 
@@ -128,7 +132,7 @@ void Game::Menu()
 				}
 
 			}
-			else texts[2].setColor(Color::White);
+			else texts[2].setColor(Color::Black);
 
 			// Try reconnect to server
 			if (newRect2.contains(static_cast <Vector2f>(Mouse::getPosition(*window))))
@@ -158,7 +162,7 @@ void Game::Menu()
 					}
 				}
 			}
-			else texts[3].setColor(Color::White);
+			else texts[3].setColor(Color::Black);
 			/*if (event.type == sf::Event::TextEntered)
 			{
 				// Handle ASCII characters only
@@ -183,6 +187,7 @@ void Game::Menu()
 
 void Game::Play()
 {
+	InitializePlay();
 	Start();
 		
 	state = END;
@@ -226,12 +231,13 @@ void Game::Inatialize()
 {
 	window = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
 
-
-	texts[3] = setText("Kliknij tutaj aby sprobwac \npolaczyc sie z serwerem", 10, 45);
-
 	texts[1] = setText("Scrabble", window->getSize().x / 2.5, 10);
-	texts[1].setScale(1.5, 1.5);
-	texts[2] = setText("Zaloguj sie", 20, 200);
+	texts[1].setScale(2, 2);
+	texts[2] = setText("Zaloguj sie", 1170, 300);
+	texts[3] = setText("Kliknij tutaj aby sprobwac \npolaczyc sie z serwerem", 10, 50);
+	texts[4] = setText("Zarejestruj", 1170, 350);
+	texts[5] = setText("Graj", window->getSize().x / 2.5 + 20, 250);
+	texts[5].setCharacterSize(75);
 
 	if (client->CheckIfConnected())
 	{
@@ -253,10 +259,13 @@ void Game::Inatialize()
 void Game::Display()
 {
 	window->clear(Color(50, 50, 50, 255));
+	window->draw(menuBackground);
 	window->draw(texts[0]);
 	window->draw(texts[1]);
 	window->draw(texts[2]);
 	if (!online) window->draw(texts[3]);
+	window->draw(texts[4]);
+	window->draw(texts[5]);
 	window->display();
 }
 
@@ -264,6 +273,7 @@ Text Game::setText(string inscription, int pos_x, int pos_y)
 {
 	Text temp;
 	temp.setFont(font);
+	temp.setColor(Color(0, 0, 0, 255));
 	temp.setString(inscription);
 	temp.setPosition(pos_x, pos_y);
 	return temp;
