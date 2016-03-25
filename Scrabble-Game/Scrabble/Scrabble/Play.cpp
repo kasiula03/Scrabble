@@ -3,6 +3,25 @@
 
 Font Play::font;
 
+Play::Play()
+{
+	if (!font.loadFromFile("data/WorkSans-Black.otf"))
+	{
+		cout << "Fond not found" << endl;
+		return;
+	}
+	if (!texture.loadFromFile("data//Graphs//GameLayout.png"))
+	{
+		std::cout << "Nie wczytano tekstury!" << std::endl;
+	}
+	Layout.setTexture(texture);
+
+	GlobalFunctions::setText(Tplayers[0], "Brak", 1110, 150);
+	GlobalFunctions::setText(Tplayers[1], "Brak", 1240, 150);
+	GlobalFunctions::setText(Tplayers[2], "Brak", 1110, 215);
+	GlobalFunctions::setText(Tplayers[3], "Brak", 1240, 215);
+}
+
 void Play::Start()
 {
 	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Fullscreen);
@@ -15,6 +34,7 @@ void Play::Start()
 		{
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
 			{
+				playWindow->close();
 				play = false;
 			}
 		}
@@ -27,42 +47,4 @@ void Play::Start()
 		playWindow->draw(Tplayers[3]);
 		playWindow->display();
 	}
-}
-
-void Play::InitializePlay()
-{
-	if (!font.loadFromFile("data/WorkSans-Black.otf"))
-	{
-		cout << "Fond not found" << endl;
-		return;
-	}
-	if (!texture.loadFromFile("data//Graphs//GameLayout.png"))
-	{
-		std::cout << "Nie wczytano tekstury!" << std::endl;
-	}
-	Layout.setTexture(texture);
-	Tplayers[0] = setText("Brak", 1110, 150);
-	//Tplayers[0].setScale(1.5, 1);
-	Tplayers[0].setColor(Color(0, 0, 0, 255));
-
-	Tplayers[1] = setText("Brak", 1240, 150);
-	//Tplayers[1].setScale(1.5, 1);
-	Tplayers[1].setColor(Color(0, 0, 0, 255));
-
-	Tplayers[2] = setText("Brak", 1110, 215);
-	//Tplayers[2].setScale(1.5, 1);
-	Tplayers[2].setColor(Color(0, 0, 0, 255));
-
-	Tplayers[3] = setText("Brak", 1240, 215);
-	//[3].setScale(1.5, 1);
-	Tplayers[3].setColor(Color(0, 0, 0, 255));
-
-}
-Text Play::setText(string inscription, int pos_x, int pos_y)
-{
-	Text temp;
-	temp.setFont(font);
-	temp.setString(inscription);
-	temp.setPosition(pos_x, pos_y);
-	return temp;
 }

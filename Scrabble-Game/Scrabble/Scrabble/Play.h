@@ -2,12 +2,15 @@
 
 #include <SFML\Graphics.hpp>
 #include <cstring>
+#include "GlobalFunctions.h"
 using namespace sf;
 using namespace std;
 
 class Play
 {
 protected:
+	Play();
+
 	static Font font;
 
 	RenderWindow * playWindow;
@@ -16,8 +19,6 @@ protected:
 	Texture texture;
 	Text Tplayers[4];
 
-	void InitializePlay();
 	void Start();
 
-	Text setText(string, int, int);
 };

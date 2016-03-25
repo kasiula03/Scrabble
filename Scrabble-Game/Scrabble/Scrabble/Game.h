@@ -3,8 +3,10 @@
 #include <Windows.h>
 #include "Client.h"
 #include "Play.h"
+#include "Login.h"
+#include "Button.h"
 #include <thread>
-class Game : public Play
+class Game : public Play, public Login
 {
 public:
 	Game(int);
@@ -12,24 +14,32 @@ public:
 	{
 		RunGame();
 	}
-	thread * gameThread; // Watek gry
-	thread * clientThread; // Watek klienta
+	
 
 private:
-	enum GameState { MENU, GAME, GAME_OVER, END, AUTHORIZATION };
+	enum GameState { MENU, GAME, GAME_OVER, END, AUTHORIZATION, REGISTER };
 	GameState state;
 
 	Client * client;
 
+	thread * gameThread; // Watek gry
+	thread * clientThread; // Watek klienta
+
 	static Font font;
-	bool online;
+	static bool online;
 
 	RenderWindow * window;
 
 	Sprite menuBackground;
 	Texture menuTexture;
-	Text texts[7];
-
+	
+	Button scrabbleButton;
+	Button loginButton;
+	Button registerButton;
+	Button reconnectButton;
+	Button gameButton;
+	
+	Text texts[4];
 	void SetLetters();
 
 	//main game functions
@@ -39,9 +49,8 @@ private:
 	void Menu();
 	void Play();
 	void Authorization();
+	void Register();
+
 	void Display();
 
-	//helpfull functions
-
-	Text setText(string, int, int);
 };

@@ -6,8 +6,6 @@
 #include <iostream>
 #include <mutex>
 
-//using namespace std;
-
 
 Serwer::Serwer()
 {
@@ -53,13 +51,12 @@ void Serwer::CreateSerwer()
 		std::cout << "Error listening on socket! " << std::endl;
 
 
-	AcceptClient();
+	//AcceptClient();
 	
 }
 
 void Serwer::AcceptClient()
 {
-	//if (countClients == 1) countClients++;
 	acceptSocket[countClients] = SOCKET_ERROR;
 	std::cout << "Waiting for a client to connect... " << std::endl;
 	while (acceptSocket[countClients] == SOCKET_ERROR)
@@ -71,18 +68,8 @@ void Serwer::AcceptClient()
 	clientConnect[countClients] = true;
 	countClients +=1;
 	
-	
 }
-/*
-Serwer::Serwer(Serwer const & serw)
-{
-	this->clientConnect = nullptr;
-	*this->acceptSocket = *serw.acceptSocket;
-	this->clientConnect = serw.clientConnect;
-	this->countClients = serw.countClients;
-	this->mainSocket = serw.mainSocket;
-	this->service = serw.service;
-}*/
+
 
 void Serwer::Send(std::string pakiet,int which)
 {
@@ -95,7 +82,7 @@ void Serwer::Send(std::string pakiet,int which)
 
 	iSendResult = send(acceptSocket[which], sendbuf, 50, 0); 
 
-	Sleep(200); //Zeby kolejne wysylania nie odbywaly sie za szybko
+	Sleep(200); //Zeby kolejne wysylania nie odbywaly sie za szybko, bo wtedy sa bledy
 	
 	if (iSendResult == SOCKET_ERROR)
 	{
@@ -143,13 +130,18 @@ void Serwer::operator()(std::string task)
 			{
 				Send("Witam szanownego trzeciego klienta", 2);
 			}
+			if (clientConnect[3])
+			{
+				Send("Witam szanownego czwartego klienta", 3);
+			}
 		}
 	}
-	else
+	else if(task == "Akceptacja")
 	{
 		while (true)
 		{
-			AcceptClient();
+			if(countClients < 4)
+				AcceptClient();
 		}
 	}
 	

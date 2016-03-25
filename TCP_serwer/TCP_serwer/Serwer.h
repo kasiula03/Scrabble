@@ -24,8 +24,6 @@ class Serwer
 public:
 	
 	Serwer();
-	//Serwer(Serwer const &);
-	//void operator=(Serwer const &) = delete;
 
 	void CreateSerwer(); 
 	void AcceptClient();
