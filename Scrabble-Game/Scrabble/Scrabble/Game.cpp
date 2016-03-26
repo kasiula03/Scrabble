@@ -6,7 +6,7 @@ using namespace std;
 
 Font Game::font;
 bool Game::online;
-
+int Game::ID;
 
 Game::Game(int a)
 {
@@ -24,6 +24,8 @@ Game::Game(int a)
 		std::cout << "Nie wczytano tekstury!" << std::endl;
 	}
 	menuBackground.setTexture(menuTexture);
+
+	this->playerName = "Guest";
 
 	gameThread = new thread(*this); 
 	gameThread->join();
@@ -129,6 +131,11 @@ void Game::Menu()
 				state = GAME;
 				menu = false;
 			}
+			if (registerButton.ifMousePressed(window))
+			{
+				state = REGISTER;
+				menu = false;
+			}
 			if (reconnectButton.ifMousePressed(window))
 			{
 				if (client->ConnectToServer())
@@ -176,16 +183,17 @@ void Game::Play()
 {
 	window->close();
 
-	Start();
+	Start(playerName);
 		
 	state = MENU;
+	Sleep(200);
 }
 
 void Game::Authorization()
 {
 	window->close();
 
-	runLoginWindow();
+	this->playerName = runLoginWindow();
 
 	state = MENU;
 	Sleep(200);
@@ -193,7 +201,12 @@ void Game::Authorization()
 
 void Game::Register()
 {
+	window->close();
 
+	runRegisterWindow();
+
+	state = MENU;
+	Sleep(200);
 }
 
 void Game::Inatialize()

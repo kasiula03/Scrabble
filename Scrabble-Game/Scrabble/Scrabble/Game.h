@@ -5,8 +5,9 @@
 #include "Play.h"
 #include "Login.h"
 #include "Button.h"
+#include "Register.h"
 #include <thread>
-class Game : public Play, public Login
+class Game : public Play, public Login, public Register
 {
 public:
 	Game(int);
@@ -14,7 +15,8 @@ public:
 	{
 		RunGame();
 	}
-	
+	string playerName;
+	static int ID;
 
 private:
 	enum GameState { MENU, GAME, GAME_OVER, END, AUTHORIZATION, REGISTER };

@@ -8,9 +8,9 @@ class Word
 public:
 	Word(string);
 	int TotalPoints();
-
-private:
 	static Letter allLeters[32]; //probably unnecessary
+private:
+	
 	string word;
 	Letter * letters;
 };

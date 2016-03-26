@@ -11,7 +11,7 @@ Login::Login()
 	//runLoginWindow();
 }
 
-void Login::runLoginWindow()
+std::string Login::runLoginWindow()
 {
 	RenderWindow windoww(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
 	bool opened = true;
@@ -30,6 +30,7 @@ void Login::runLoginWindow()
 		{
 			windoww.close();
 			opened = false;
+			return "Guest2";
 		}
 
 		windoww.clear(Color(50, 50, 50, 255));
@@ -39,6 +40,7 @@ void Login::runLoginWindow()
 		//window.draw(rec);
 		windoww.display();
 	}
+	return "None";
 }
 
 bool Login::tryToLogin(std::string usr, std::string password)

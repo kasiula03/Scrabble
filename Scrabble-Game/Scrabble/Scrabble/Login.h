@@ -7,6 +7,6 @@ class Login
 	sf::Text txts[5];
 public:
 	Login();
-	void runLoginWindow();
+	std::string runLoginWindow();
 	bool tryToLogin(std::string usr, std::string password);
 };

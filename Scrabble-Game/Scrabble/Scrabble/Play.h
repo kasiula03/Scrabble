@@ -3,6 +3,7 @@
 #include <SFML\Graphics.hpp>
 #include <cstring>
 #include "GlobalFunctions.h"
+#include "Field.h"
 using namespace sf;
 using namespace std;
 
@@ -19,6 +20,14 @@ protected:
 	Texture texture;
 	Text Tplayers[4];
 
-	void Start();
+	Field board[15][15];
+	Letter allLeters[32];
+
+	void Start(string playerName);
+	void randomLetters();
+
+	void prepareBoard();
+	void setLetters();
+	void Display();
 
 };
