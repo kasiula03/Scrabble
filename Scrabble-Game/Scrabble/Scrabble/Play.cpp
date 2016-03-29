@@ -1,7 +1,8 @@
 #include "Play.h"
 #include <iostream>
 #include <cmath>
-
+#include <cstdlib>
+#include <ctime>
 Font Play::font;
 
 Play::Play()
@@ -23,8 +24,14 @@ Play::Play()
 	GlobalFunctions::setText(Tplayers[2], "Brak", 1110, 215);
 	GlobalFunctions::setText(Tplayers[3], "Brak", 1240, 215);
 
+	
 	setLetters();
 	prepareBoard();
+	//allLeters[0].setPosition(200, 200);
+	//allLeters[1].setPosition(240, 200);
+	//existLetters.push_back(Letter(allLeters[0]));
+	//existLetters.push_back(Letter(allLeters[1]));
+	randomLetters();
 }
 
 void Play::prepareBoard()
@@ -34,8 +41,49 @@ void Play::prepareBoard()
 		for (int j = 0; j < 15; j++)
 		{
 			board[i][j] = Field(240 + (i*40), 30 + (j * 40));
+			board[i][j].occupied = false;
 		}
 	}
+}
+
+void Play::randomLetters()
+{
+	srand(time(NULL));
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			int k = rand() % 32;
+			allLeters[k].setPosition((1120 + i * 40), (300 + j * 40));
+			existLetters.push_back(Letter(allLeters[k]));
+		}
+	}
+}
+
+bool Play::checkLetter(Letter letter, int & x, int & y)
+{
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (!board[i][j].occupied)
+			{
+				int dist_x = abs(letter.getPositionX() - board[i][j].getPositionX() + 10);
+				int dist_y = abs(letter.getPositionY() - board[i][j].getPositionY() + 25);
+
+				if (dist_x < 30 && dist_x > 0 && dist_y < 30 && dist_y > 0)
+				{
+					x = board[i][j].getPositionX();
+					y = board[i][j].getPositionY();
+					board[i][j].occupied = true;
+					return true;
+				}
+				
+			}
+		}
+	}
+	return false;
 }
 
 void Play::setLetters()
@@ -93,9 +141,37 @@ void Play::Start(string playerName)
 				play = false;
 			}
 
-			int dist_x = abs(event.mouseButton.x - (allLeters[0].getPositionX() + 10));
-			int dist_y = abs(event.mouseButton.y - (allLeters[0].getPositionY() + 10));
-			if (dist_x < 20 && dist_y < 20)
+			for (int i = 0; i < existLetters.size(); i++)
+			{
+				if (!existLetters[i].placed)
+				{
+					int prev_x = existLetters[i].getPositionX();
+					int prev_y = existLetters[i].getPositionY();
+					if (existLetters[i].dragAndDrop())
+					{
+						while (Mouse::isButtonPressed(Mouse::Left))
+						{
+							//playWindow->pollEvent(event);
+							int x = Mouse::getPosition().x - 30;
+							int y = Mouse::getPosition().y - 30;
+							existLetters[i].setPosition(x, y);
+							Display();
+						}
+						int xx, yy;
+
+						if (checkLetter(existLetters[i], xx, yy))
+						{
+							existLetters[i].setPosition(xx, yy);
+							existLetters[i].placed = true;
+						}
+						else
+						{
+							existLetters[i].setPosition(prev_x, prev_y);
+						}
+					}
+				}
+			}
+			/*if (allLeters[0].dragAndDrop())
 			{
 				while (Mouse::isButtonPressed(Mouse::Left))
 				{
@@ -104,8 +180,9 @@ void Play::Start(string playerName)
 					int y = Mouse::getPosition().y - 30;
 					allLeters[0].setPosition(x, y);
 					Display();
+
 				}
-			}
+			}*/
 		}
 		
 		Display();
@@ -121,7 +198,8 @@ void Play::Display()
 	playWindow->draw(Tplayers[1]);
 	playWindow->draw(Tplayers[2]);
 	playWindow->draw(Tplayers[3]);
-	playWindow->draw(allLeters[0]);
+	for (int i = 0; i < existLetters.size(); i++)
+		playWindow->draw(existLetters[i]);
 	/*for (int i = 1; i < 15; i++)
 	{
 		for (int j = 1; j < 15; j++)

@@ -19,5 +19,8 @@ class Field : public sf::Drawable, sf::Transformable
 	bool ifLetterTouching(Letter * letter); //check if letter touching our field
 
 public:
+	int getPositionX();
+	int getPositionY();
+	bool occupied;
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const; //trzeba potem skasowac
 };

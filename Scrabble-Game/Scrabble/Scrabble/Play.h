@@ -4,6 +4,7 @@
 #include <cstring>
 #include "GlobalFunctions.h"
 #include "Field.h"
+#include <vector>
 using namespace sf;
 using namespace std;
 
@@ -22,9 +23,11 @@ protected:
 
 	Field board[15][15];
 	Letter allLeters[32];
+	vector<Letter> existLetters;
 
 	void Start(string playerName);
 	void randomLetters();
+	bool checkLetter(Letter letter, int & x, int & y);
 
 	void prepareBoard();
 	void setLetters();

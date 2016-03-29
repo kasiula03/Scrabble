@@ -19,12 +19,13 @@ public:
 	Letter& operator= (Letter const& lt);
 
 	void setPosition(int x, int y);
-	void dragAndDrop();
+	bool dragAndDrop();
 	int getPositionX();
 	int getPositionY();
 
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 	Sprite sprite;
+	bool placed;
 
 private:
 	char sign; // sign which represent our letter
@@ -33,5 +34,6 @@ private:
 	int pos_x;
 	int pos_y;
 	
+
 	Texture texture;
 };

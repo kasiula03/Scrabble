@@ -17,6 +17,16 @@ Field::Field(int pos_x, int pos_y)
 	collider.setPosition(pos_x, pos_y);
 }
 
+int Field::getPositionX()
+{
+	return this->pos_x;
+}
+
+int Field::getPositionY()
+{
+	return this->pos_y;
+}
+
 bool Field::ifLetterTouching(Letter * letter)
 {
 	int distanceX = (pos_x + 20) - (letter->getPositionX() + 20);
