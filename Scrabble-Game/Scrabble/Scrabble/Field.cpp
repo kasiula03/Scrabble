@@ -9,12 +9,12 @@ Field::Field(int pos_x, int pos_y)
 {
 	this->pos_x = pos_x;
 	this->pos_y = pos_y;
-
+	collider.setPosition(pos_x, pos_y);
 	collider.setSize(Vector2f(width, height));
 
 	collider.setFillColor(sf::Color(255, 232, 54, 120));
 	//collider.setOrigin(32, 32);
-	collider.setPosition(pos_x, pos_y);
+	
 }
 
 int Field::getPositionX()

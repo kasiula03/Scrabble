@@ -3,17 +3,19 @@
 #pragma comment(lib, "ws2_32.lib")
 #include "Client.h"
 #include <iostream>
+#include <sstream>
 //#include <WinSock2.h>
 
 bool Client::connected;
-
+bool Client::messageReceived;
+string Client::receivedMessage;
 using namespace std;
 
 Client::Client()
 {
 
 	if (!ConnectToServer()) return;
-
+	messageReceived = false;
 	//Send();
 }
 
@@ -58,31 +60,12 @@ bool Client::CheckIfConnected()
 
 void Client::Send(string date)
 {
-	int bytesSent;
-	
-	char recvbuf[32] = "";
-	int size = date.length();
-	
-	int i = 0;
-	char * sendbuf = new char[size]; // to wysylamy
-	strcpy(sendbuf, date.c_str());
-	
-	bytesSent = send(mainSocket, sendbuf, size, 0);
-		/*while (bytesRecv == SOCKET_ERROR)
-		{
-			bytesRecv = recv(mainSocket, recvbuf, 32, 0);
-
-			if (bytesRecv == 0 || bytesRecv == WSAECONNRESET)
-			{
-				cout << "Connection closed" << endl;
-				break;
-			}
-			if (bytesRecv < 0)
-				return;
-
-			cout << "Bytes received: " << bytesRecv << endl;
-			cout << "Received text: " << recvbuf << endl;
-		}*/
+	if (this->CheckIfConnected())
+	{
+		int bufferLength = date.size();
+		send(mainSocket, (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+		send(mainSocket, date.c_str(), date.length(), NULL);
+	}
 	
 }
 void Client::Receive()
@@ -108,14 +91,48 @@ void Client::Receive()
 	
 	
 }
-
-void Client::operator()()
+string Client::getReceivedMessage()
 {
-	while (true)
+	return receivedMessage;
+}
+void Client::operator()(std::string task)
+{
+	
+	if (task == "Wysylanie")
 	{
-		if (this->CheckIfConnected())
+		
+	}
+	else if (task == "Odbieranie")
+	{
+		int bufferLength;
+		char * playerName;
+		int playerNameSize;
+		//int whichPlayer = 0;
+		while (true)
 		{
-			Receive();
+			if (this->CheckIfConnected())
+			{
+				recv(mainSocket, (char*)&playerNameSize, sizeof(int), NULL);
+				playerName = new char[playerNameSize + 1];
+				playerName[playerNameSize] = '\0';
+				recv(mainSocket, playerName, playerNameSize, NULL);
+
+				recv(mainSocket, (char*)&bufferLength, sizeof(int), NULL);
+				char * buffer = new char[bufferLength + 1];
+				buffer[bufferLength] = '\0';
+				recv(mainSocket, buffer, bufferLength, NULL);
+
+				messageReceived = true;
+				receivedMessage = (string)playerName + buffer;
+				
+				//ostringstream ss;
+				//ss << whichPlayer;
+				//string liczba = ss.str();
+
+				//receivedMessage += liczba;
+				cout << buffer << endl;
+				delete[] buffer;
+			}
 		}
 	}
 }

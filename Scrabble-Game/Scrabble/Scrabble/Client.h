@@ -18,9 +18,13 @@ public:
 	void Receive();
 	bool CheckIfConnected(); // check if our client is connected with server
 
-	void operator()(); //thread function
-	
+	void operator()(std::string task); //thread function
+	string getReceivedMessage();
+
 	static bool connected;
+
+	static string receivedMessage;
+	static bool messageReceived;
 
 private:
 	SOCKET mainSocket;

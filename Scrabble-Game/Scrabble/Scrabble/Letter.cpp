@@ -56,16 +56,18 @@ Letter& Letter::operator=(Letter const& lt)
 
 bool Letter::dragAndDrop()
 {
-	int dist_x = Mouse::getPosition().x - (pos_x + 10);
-	int dist_y = Mouse::getPosition().y - (pos_y + 25);
-	//cout << Mouse::getPosition().x << " " << Mouse::getPosition().y << endl;
-	//cout << allLeters[0].getPositionX() << " " << allLeters[0].getPositionY() << endl;
-	if (dist_x < 40 && dist_x > 0 && dist_y < 40 && dist_y > 0)
-		return true;
-	else 
-		return false;
-	
-	
+	if (Mouse::isButtonPressed(Mouse::Left))
+	{
+		int dist_x = Mouse::getPosition().x - (pos_x + 10);
+		int dist_y = Mouse::getPosition().y - (pos_y + 25);
+		//cout << Mouse::getPosition().x << " " << Mouse::getPosition().y << endl;
+		//cout << allLeters[0].getPositionX() << " " << allLeters[0].getPositionY() << endl;
+		if (dist_x < 40 && dist_x > 0 && dist_y < 40 && dist_y > 0)
+			return true;
+		else
+			return false;
+	}
+	return false;
 }
 
 int Letter::getPositionX()

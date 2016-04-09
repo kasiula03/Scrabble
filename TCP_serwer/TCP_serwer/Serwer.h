@@ -8,19 +8,22 @@
 #include <string>
 #include <Windows.h>
 #include <iostream>
-
+#include <thread>
 
 
 class Serwer
 {
 	SOCKET mainSocket;
 	sockaddr_in service;
-	SOCKET acceptSocket[4];
+	static SOCKET acceptSocket[4];
+	static std::string playersName[4];
 
-	int countClients;
+	bool sendMessage;
+
+	static int countClients;
 	
 	bool * clientConnect; 
-
+	std::thread * clientsThread[4];
 public:
 	
 	Serwer();
@@ -30,5 +33,5 @@ public:
 	void Receive();
 	void Send(std::string,int); //send data as string
 
-	void operator()(std::string); //thread function
+	void operator()(std::string, int index); //thread function
 };

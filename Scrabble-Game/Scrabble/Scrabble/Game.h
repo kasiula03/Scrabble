@@ -25,7 +25,8 @@ private:
 	Client * client;
 
 	thread * gameThread; // Watek gry
-	thread * clientThread; // Watek klienta
+	//thread * clientThreadSend; // Watek klienta wysylanie
+	thread * clientThreadRecv;
 
 	static Font font;
 	static bool online;

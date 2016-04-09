@@ -5,8 +5,11 @@
 
 #include <iostream>
 #include <mutex>
+#include <thread>
 
-
+int Serwer::countClients;
+SOCKET Serwer::acceptSocket[4];
+std::string Serwer::playersName[4];
 Serwer::Serwer()
 {
 	clientConnect = new bool[4];
@@ -14,11 +17,12 @@ Serwer::Serwer()
 	for (int i = 0; i < 4; i++)
 	{
 		clientConnect[i] = false;
+		playersName[i] = "Player" + std::to_string(i) + ": ";
 	}
 	CreateSerwer();
-	
+
 	//Receive();
-	
+
 }
 
 void Serwer::CreateSerwer()
@@ -52,7 +56,7 @@ void Serwer::CreateSerwer()
 
 
 	//AcceptClient();
-	
+
 }
 
 void Serwer::AcceptClient()
@@ -63,15 +67,20 @@ void Serwer::AcceptClient()
 	{
 		acceptSocket[countClients] = accept(mainSocket, NULL, NULL);
 	}
-	
+
 	std::cout << "Client connected " << std::endl;
-	clientConnect[countClients] = true;
-	countClients +=1;
 	
+	
+	clientConnect[countClients] = true;
+
+	countClients += 1;
+
+	clientsThread[countClients] = new std::thread(*this, "Odbieranie", countClients - 1);
+
 }
 
 
-void Serwer::Send(std::string pakiet,int which)
+void Serwer::Send(std::string pakiet, int which)
 {
 	int iResult = 2, iSendResult;
 
@@ -80,10 +89,10 @@ void Serwer::Send(std::string pakiet,int which)
 	char * sendbuf = new char[size]; // to wysylamy
 	strcpy(sendbuf, pakiet.c_str());
 
-	iSendResult = send(acceptSocket[which], sendbuf, 50, 0); 
+	iSendResult = send(acceptSocket[which], sendbuf, 50, 0);
 
 	Sleep(200); //Zeby kolejne wysylania nie odbywaly sie za szybko, bo wtedy sa bledy
-	
+
 	if (iSendResult == SOCKET_ERROR)
 	{
 		std::cout << "Connection closing" << std::endl;
@@ -91,8 +100,8 @@ void Serwer::Send(std::string pakiet,int which)
 		closesocket(acceptSocket[which]);
 		return;
 	}
-	
-		
+
+
 }
 
 void Serwer::Receive()
@@ -110,9 +119,9 @@ void Serwer::Receive()
 	std::cout << "Bytes send: " << bytesSent << std::endl;
 }
 
-void Serwer::operator()(std::string task)
+void Serwer::operator()(std::string task, int index)
 {
-	
+
 	if (task == "Wysylanie")
 	{
 		while (true)
@@ -136,13 +145,53 @@ void Serwer::operator()(std::string task)
 			}
 		}
 	}
-	else if(task == "Akceptacja")
+	else if (task == "Akceptacja")
 	{
 		while (true)
 		{
-			if(countClients < 4)
+			if (countClients < 4)
 				AcceptClient();
 		}
 	}
-	
+	else if (task == "Odbieranie")
+	{
+		int bufferLength;
+		while (true)
+		{
+			
+			recv(acceptSocket[index], (char*)&bufferLength, sizeof(int), NULL);
+
+			char * buffer = new char[bufferLength];
+			
+			recv(acceptSocket[index], buffer, bufferLength, NULL);
+
+			for (int i = 0; i < countClients; i++)
+			{
+				if (i == index)
+					continue;
+
+				if (clientConnect[i])
+				{
+					char * playerName = (char*)playersName[index].c_str();
+				
+					int playerNameSize = playersName[index].length();
+
+					send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+
+					send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+					send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+
+					send(acceptSocket[i], buffer, bufferLength, NULL);
+
+					//delete[] playerName;
+				}
+			}
+			
+			delete[] buffer;
+			
+		}
+		
+	}
+
 }

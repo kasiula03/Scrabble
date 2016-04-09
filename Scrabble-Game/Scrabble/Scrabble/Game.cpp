@@ -11,6 +11,8 @@ int Game::ID;
 Game::Game(int a)
 {
 	client = new Client();
+	Play::client = this->client;
+
 	SetLetters();
 	GlobalFunctions::GlobalFunctions();
 	state = MENU;
@@ -141,7 +143,8 @@ void Game::Menu()
 				if (client->ConnectToServer())
 				{
 					cout << "Polaczylem" << endl;
-					clientThread = new thread(*client);
+					//clientThreadSend = new thread(*client,"Wysylanie");
+					clientThreadRecv = new thread(*client, "Odbieranie");
 
 					online = true;
 					GlobalFunctions::setText(texts[0], "Gra w trybie online", 10, 10);
@@ -226,7 +229,8 @@ void Game::Inatialize()
 			online = true;
 			GlobalFunctions::setText(texts[0], "Gra w trybie online", 10, 10);
 			//client->Send("Polaczylem");
-			clientThread = new thread(*client);
+			//clientThreadSend = new thread(*client, "Wysylanie");
+			clientThreadRecv = new thread(*client, "Odbieranie");
 
 		}
 		else

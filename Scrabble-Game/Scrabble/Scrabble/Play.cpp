@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <thread>
 Font Play::font;
 
 Play::Play()
@@ -18,35 +19,38 @@ Play::Play()
 		std::cout << "Nie wczytano tekstury!" << std::endl;
 	}
 	Layout.setTexture(texture);
-
-	GlobalFunctions::setText(Tplayers[0], "Brak", 1110, 150);
-	GlobalFunctions::setText(Tplayers[1], "Brak", 1240, 150);
-	GlobalFunctions::setText(Tplayers[2], "Brak", 1110, 215);
-	GlobalFunctions::setText(Tplayers[3], "Brak", 1240, 215);
-
 	
-	setLetters();
-	prepareBoard();
+	GlobalFunctions::setText(Tplayers[0], "Brak", 1060, 150);
+	GlobalFunctions::setText(Tplayers[1], "Brak", 1190, 150);
+	GlobalFunctions::setText(Tplayers[2], "Brak", 1060, 215);
+	GlobalFunctions::setText(Tplayers[3], "Brak", 1190, 215);
+
+	countTexts = 0;
+	ourTurn = true;
+	this->canWrite = false;
+	SetLetters();
+	PrepareBoard();
 	//allLeters[0].setPosition(200, 200);
 	//allLeters[1].setPosition(240, 200);
 	//existLetters.push_back(Letter(allLeters[0]));
 	//existLetters.push_back(Letter(allLeters[1]));
-	randomLetters();
+	
+	RandomLetters();
 }
 
-void Play::prepareBoard()
+void Play::PrepareBoard()
 {
 	for (int i = 0; i < 15; i++)
 	{
 		for (int j = 0; j < 15; j++)
 		{
-			board[i][j] = Field(240 + (i*40), 30 + (j * 40));
+			board[i][j] = Field(188 + (i*40), 30 + (j * 40));
 			board[i][j].occupied = false;
 		}
 	}
 }
 
-void Play::randomLetters()
+void Play::RandomLetters()
 {
 	srand(time(NULL));
 
@@ -55,13 +59,13 @@ void Play::randomLetters()
 		for (int j = 0; j < 2; j++)
 		{
 			int k = rand() % 32;
-			allLeters[k].setPosition((1120 + i * 40), (300 + j * 40));
+			allLeters[k].setPosition((1070 + i * 40), (300 + j * 40));
 			existLetters.push_back(Letter(allLeters[k]));
 		}
 	}
 }
 
-bool Play::checkLetter(Letter letter, int & x, int & y)
+bool Play::CheckLetter(Letter letter, int & x, int & y)
 {
 	for (int i = 0; i < 15; i++)
 	{
@@ -81,12 +85,13 @@ bool Play::checkLetter(Letter letter, int & x, int & y)
 				}
 				
 			}
+			
 		}
 	}
 	return false;
 }
 
-void Play::setLetters()
+void Play::SetLetters()
 {
 	allLeters[0] = Letter('A', 1);
 	allLeters[1] = Letter('¥', 5);
@@ -122,17 +127,90 @@ void Play::setLetters()
 	allLeters[31] = Letter('¯', 5);
 }
 
+void Play::LettersUpdate()
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (ourTurn)
+		{
+			int prev_x = existLetters[i].getPositionX();
+			int prev_y = existLetters[i].getPositionY();
+			if (existLetters[i].dragAndDrop())
+			{
+
+				while (Mouse::isButtonPressed(Mouse::Left))
+				{
+					//playWindow->pollEvent(event);
+					int x = Mouse::getPosition().x - 30;
+					int y = Mouse::getPosition().y - 30;
+					existLetters[i].setPosition(x, y);
+					Display();
+				}
+				int xx, yy;
+
+				if (CheckLetter(existLetters[i], xx, yy))
+				{
+					for (int i = 0; i < 15; i++)
+					{
+						for (int j = 0; j < 15; j++)
+						{
+							if (prev_x == board[i][j].getPositionX() && prev_y == board[i][j].getPositionY())
+								board[i][j].occupied = false;
+						}
+
+					}
+					
+					existLetters[i].setPosition(xx, yy);
+					existLetters[i].placed = true;
+				}
+				else
+				{
+					existLetters[i].setPosition(prev_x, prev_y);
+				}
+			}
+		}
+	}
+}
+
 void Play::Start(string playerName)
 {
 	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
-	GlobalFunctions::setText(Tplayers[0], playerName, 1110, 150, 25);
+	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
 	bool play = true;
+	//string str = "";
 	
+	//GlobalFunctions::setText(txt, str, 1100, 500, 15);
 	Event event;
 	allLeters[0].setPosition(240, 30);
+	
+	this->canWrite = false;
+
 	while (play)
 	{
 		Vector2i mousePos = Mouse::getPosition(*playWindow);
+		if (client->messageReceived)
+		{
+			Text temp;
+			string tekst = client->getReceivedMessage();
+			
+
+			GlobalFunctions::setText(temp, tekst, 1000, 450 + (15 * countTexts), 15);
+			conversation.push_back(temp);
+			countTexts++;
+			client->messageReceived = false;
+			if (conversation.size() > 11)
+			{
+
+				for (int i = 0; i < conversation.size() - 1; i++)
+				{
+					conversation[i] = conversation[i + 1];
+					conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
+				}
+				conversation.pop_back();
+				this->countTexts--;
+
+			}
+		}
 		while (playWindow->pollEvent(event)) 
 		{
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -141,54 +219,71 @@ void Play::Start(string playerName)
 				play = false;
 			}
 
-			for (int i = 0; i < existLetters.size(); i++)
-			{
-				if (!existLetters[i].placed)
-				{
-					int prev_x = existLetters[i].getPositionX();
-					int prev_y = existLetters[i].getPositionY();
-					if (existLetters[i].dragAndDrop())
-					{
-						while (Mouse::isButtonPressed(Mouse::Left))
-						{
-							//playWindow->pollEvent(event);
-							int x = Mouse::getPosition().x - 30;
-							int y = Mouse::getPosition().y - 30;
-							existLetters[i].setPosition(x, y);
-							Display();
-						}
-						int xx, yy;
-
-						if (checkLetter(existLetters[i], xx, yy))
-						{
-							existLetters[i].setPosition(xx, yy);
-							existLetters[i].placed = true;
-						}
-						else
-						{
-							existLetters[i].setPosition(prev_x, prev_y);
-						}
-					}
-				}
-			}
-			/*if (allLeters[0].dragAndDrop())
-			{
-				while (Mouse::isButtonPressed(Mouse::Left))
-				{
-					//playWindow->pollEvent(event);
-					int x = Mouse::getPosition().x - 30;
-					int y = Mouse::getPosition().y - 30;
-					allLeters[0].setPosition(x, y);
-					Display();
-
-				}
-			}*/
+			LettersUpdate();
+			WriteControl(event);
 		}
 		
 		Display();
 	}
 }
+void Play::WriteControl(Event & event)
+{
+	if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
+	{
+		if (canWrite)
+			canWrite = false;
+		else
+		{
+			canWrite = true;
+			
+		}
+	}
 
+	if (event.type == sf::Event::TextEntered)
+	{
+		// Handle ASCII characters only
+		if (this->canWrite)
+		{
+			if (event.text.unicode < 128 && event.text.unicode != 13)
+			{
+				str += static_cast<char>(event.text.unicode);
+
+				GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
+
+			}
+		}
+	}
+	if (Keyboard::isKeyPressed(Keyboard::BackSpace) && str.length() > 0)
+	{
+		str.erase(str.length() - 1, str.length());
+		GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
+	}
+	if (str.length() > 0 && (event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
+	{
+		Text temp;
+		conversation.push_back(temp);
+		std::thread sendThread(&Client::Send, &*client, str);
+		sendThread.join();
+		//client->Send(str);
+		GlobalFunctions::setText(conversation[this->countTexts],"Ja: " + str, 1000, 450 + (15 * countTexts), 15);
+		GlobalFunctions::setText(tempTxt, "", 1000, 620, 15);
+		str = "";
+		this->countTexts++;
+
+		if (conversation.size() > 11)
+		{
+			
+			for (int i = 0; i < conversation.size() - 1; i++)
+			{
+				conversation[i] = conversation[i + 1];
+				conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
+			}
+			conversation.pop_back();
+			this->countTexts--;
+			
+		}
+	}
+}
 void Play::Display()
 {
 	playWindow->clear(Color(50, 50, 50, 255));
@@ -198,14 +293,17 @@ void Play::Display()
 	playWindow->draw(Tplayers[1]);
 	playWindow->draw(Tplayers[2]);
 	playWindow->draw(Tplayers[3]);
+	playWindow->draw(tempTxt);
+	for (int i = 0; i < conversation.size(); i++)
+		playWindow->draw(conversation[i]);
 	for (int i = 0; i < existLetters.size(); i++)
 		playWindow->draw(existLetters[i]);
-	/*for (int i = 1; i < 15; i++)
+
+	/*for (int i = 0; i < 15; i++)
 	{
-		for (int j = 1; j < 15; j++)
+		for (int j = 0; j < 15; j++)
 			playWindow->draw(board[i][j]);
 	}*/
-	
 	
 	playWindow->display();
 }
