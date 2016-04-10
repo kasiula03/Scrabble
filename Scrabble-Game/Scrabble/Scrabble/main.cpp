@@ -6,7 +6,7 @@ using namespace std;
 int main()
 {
 	Game game(2);
-	Word word("AAAAA");
+	//Word word("AAAAA");
 	
 	return 0;
 }

@@ -30,8 +30,8 @@ public:
 
 	void CreateSerwer(); 
 	void AcceptClient();
+	void ManageConversation(int index);
 	void Receive();
 	void Send(std::string,int); //send data as string
 
-	void operator()(std::string, int index); //thread function
 };

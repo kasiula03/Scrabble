@@ -13,10 +13,18 @@ Field::Field(int pos_x, int pos_y)
 	collider.setSize(Vector2f(width, height));
 
 	collider.setFillColor(sf::Color(255, 232, 54, 120));
+	setBonus("None");
 	//collider.setOrigin(32, 32);
 	
 }
-
+string Field::getBonus()
+{
+	return bonus;
+}
+void Field::setBonus(string bonus)
+{
+	this->bonus = bonus;
+}
 int Field::getPositionX()
 {
 	return this->pos_x;

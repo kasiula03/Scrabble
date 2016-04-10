@@ -19,20 +19,26 @@ public:
 	Letter& operator= (Letter const& lt);
 
 	void setPosition(int x, int y);
-	bool dragAndDrop();
+	bool dragAndDrop(sf::RenderWindow * window);
 	int getPositionX();
 	int getPositionY();
+
+	bool operator <(const Letter& letter) const;
+	static int letterCounter;
+	int id;
 
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 	Sprite sprite;
 	bool placed;
 
+	int pos_x;
+	int pos_y;
+
 private:
 	char sign; // sign which represent our letter
 	int points; // amount points our letter
 
-	int pos_x;
-	int pos_y;
+	
 	
 
 	Texture texture;

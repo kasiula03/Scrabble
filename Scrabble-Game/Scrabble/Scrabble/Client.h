@@ -15,10 +15,10 @@ public:
 	
 	bool ConnectToServer(); // try to connect with server
 	void Send(std::string); // send data to server
+	void Listen(); // thread function
 	void Receive();
 	bool CheckIfConnected(); // check if our client is connected with server
 
-	void operator()(std::string task); //thread function
 	string getReceivedMessage();
 
 	static bool connected;

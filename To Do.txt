@@ -1,0 +1,4 @@
+dziala dostawianie liter,
+tworzenie slow w pionie i w poziomie.
+
+- uwzglêdniæ, ¿e po dostawieniu liter mo¿e powstaæ kilka s³ów

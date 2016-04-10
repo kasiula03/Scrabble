@@ -12,6 +12,7 @@ class Field : public sf::Drawable, sf::Transformable
 	int width = 40;
 	int height = 40;
 
+	string bonus;
 	sf::RectangleShape collider;
 
 	Field();
@@ -22,5 +23,9 @@ public:
 	int getPositionX();
 	int getPositionY();
 	bool occupied;
+
+	string getBonus();
+	void setBonus(string);
+
 	virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const; //trzeba potem skasowac
 };

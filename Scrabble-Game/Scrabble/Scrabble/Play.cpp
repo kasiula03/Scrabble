@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <thread>
+
 Font Play::font;
 
 Play::Play()
@@ -24,6 +25,8 @@ Play::Play()
 	GlobalFunctions::setText(Tplayers[1], "Brak", 1190, 150);
 	GlobalFunctions::setText(Tplayers[2], "Brak", 1060, 215);
 	GlobalFunctions::setText(Tplayers[3], "Brak", 1190, 215);
+
+	acceptWord = new Button("Zatwierdz slowo", 1040, 385);
 
 	countTexts = 0;
 	ourTurn = true;
@@ -48,18 +51,79 @@ void Play::PrepareBoard()
 			board[i][j].occupied = false;
 		}
 	}
+	board[0][0].setBonus("WyrazX3");
+	board[7][0].setBonus("WyrazX3");
+	board[14][0].setBonus("WyrazX3");
+	board[0][7].setBonus("WyrazX3");
+	board[0][14].setBonus("WyrazX3");
+	board[7][14].setBonus("WyrazX3");
+	board[14][14].setBonus("WyrazX3");
+	board[14][7].setBonus("WyrazX3");
+	
+	board[1][1].setBonus("WyrazX2");
+	board[2][2].setBonus("WyrazX2");
+	board[3][3].setBonus("WyrazX2");
+	board[4][4].setBonus("WyrazX2");
+	board[7][7].setBonus("WyrazX2");
+	board[10][10].setBonus("WyrazX2");
+	board[11][11].setBonus("WyrazX2");
+	board[12][12].setBonus("WyrazX2");
+	board[13][13].setBonus("WyrazX2");
+
+	board[13][1].setBonus("WyrazX2");
+	board[12][2].setBonus("WyrazX2");
+	board[11][3].setBonus("WyrazX2");
+	board[10][4].setBonus("WyrazX2");
+	board[4][10].setBonus("WyrazX2");
+	board[3][11].setBonus("WyrazX2");
+	board[2][12].setBonus("WyrazX2");
+	board[1][13].setBonus("WyrazX2");
+
+	board[3][0].setBonus("LiteraX2");
+	board[11][0].setBonus("LiteraX2");
+	board[6][2].setBonus("LiteraX2");
+	board[8][2].setBonus("LiteraX2");
+	board[0][3].setBonus("LiteraX2");
+	board[7][3].setBonus("LiteraX2");
+
+	board[14][3].setBonus("LiteraX2");
+	board[2][6].setBonus("LiteraX2");
+	board[12][6].setBonus("LiteraX2");
+	board[3][7].setBonus("LiteraX2");
+	board[11][7].setBonus("LiteraX2");
+	board[2][8].setBonus("LiteraX2");
+	board[12][8].setBonus("LiteraX2");
+
+	board[0][11].setBonus("LiteraX2");
+	board[7][11].setBonus("LiteraX2");
+	board[14][11].setBonus("LiteraX2");
+	board[6][12].setBonus("LiteraX2");
+	board[8][12].setBonus("LiteraX2");
+	board[3][14].setBonus("LiteraX2");
+	board[11][14].setBonus("LiteraX2");
+
+	board[5][1].setBonus("LiteraX3");
+	board[9][1].setBonus("LiteraX3");
+	board[1][5].setBonus("LiteraX3");
+	board[13][5].setBonus("LiteraX3");
+	board[1][9].setBonus("LiteraX3");
+	board[13][9].setBonus("LiteraX3");
+	board[5][13].setBonus("LiteraX3");
+	board[9][13].setBonus("LiteraX3");
 }
 
 void Play::RandomLetters()
 {
 	srand(time(NULL));
-
+	int count = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 2; j++)
 		{
 			int k = rand() % 32;
 			allLeters[k].setPosition((1070 + i * 40), (300 + j * 40));
+			allLeters[k].id = count;
+			count++;
 			existLetters.push_back(Letter(allLeters[k]));
 		}
 	}
@@ -90,13 +154,55 @@ bool Play::CheckLetter(Letter letter, int & x, int & y)
 	}
 	return false;
 }
+Field * Play::GetBoardField(Letter * letter)
+{
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (letter->getPositionX() == board[i][j].getPositionX() && letter->getPositionY() == board[i][j].getPositionY())
+			{
+				return &board[i][j];
+			}
+		}
+
+	}
+	return nullptr;
+}
+Letter * Play::GetLetterOnBoard(Field * field)
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (field->getPositionX() == existLetters[i].getPositionX() && field->getPositionY() == existLetters[i].getPositionY())
+		{
+			return &existLetters[i];
+		}
+	}
+	return nullptr;
+}
+
+Field * Play::GetField(int pos_x, int pos_y)
+{
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (board[i][j].getPositionX() == pos_x && board[i][j].getPositionY() == pos_y)
+			{
+				return &board[i][j];
+			}
+		}
+
+	}
+	return nullptr;
+}
 
 void Play::SetLetters()
 {
 	allLeters[0] = Letter('A', 1);
 	allLeters[1] = Letter('¥', 5);
 	allLeters[2] = Letter('B', 3);
-	allLeters[3] = Letter('C', 6);
+	allLeters[3] = Letter('C', 2);
 	allLeters[4] = Letter('Æ', 6);
 	allLeters[5] = Letter('D', 2);
 	allLeters[6] = Letter('E', 1);
@@ -135,14 +241,15 @@ void Play::LettersUpdate()
 		{
 			int prev_x = existLetters[i].getPositionX();
 			int prev_y = existLetters[i].getPositionY();
-			if (existLetters[i].dragAndDrop())
+			if (existLetters[i].dragAndDrop(playWindow))
 			{
 
 				while (Mouse::isButtonPressed(Mouse::Left))
 				{
-					//playWindow->pollEvent(event);
-					int x = Mouse::getPosition().x - 30;
-					int y = Mouse::getPosition().y - 30;
+					sf::Vector2i pozycjaMyszyWzgledemOkna = sf::Mouse::getPosition(*playWindow);
+					sf::Vector2f pozycjaMyszyNaScenie = playWindow->mapPixelToCoords(pozycjaMyszyWzgledemOkna);
+					int x = pozycjaMyszyNaScenie.x;
+					int y = pozycjaMyszyNaScenie.y;
 					existLetters[i].setPosition(x, y);
 					Display();
 				}
@@ -162,6 +269,8 @@ void Play::LettersUpdate()
 					
 					existLetters[i].setPosition(xx, yy);
 					existLetters[i].placed = true;
+					if(!(newWord->LetterExist(&existLetters[i])))
+						newWord->addLetter(&existLetters[i]);
 				}
 				else
 				{
@@ -184,7 +293,13 @@ void Play::Start(string playerName)
 	allLeters[0].setPosition(240, 30);
 	
 	this->canWrite = false;
-
+	newWord = new Word();
+	/*newWord->addLetter(existLetters[0]);
+	newWord->addLetter(existLetters[2]);
+	newWord->addLetter(existLetters[1]);
+	newWord->addLetter(existLetters[3]);
+	newWord->addLetter(existLetters[5]);
+	newWord->deleteLetter(existLetters[1]);*/
 	while (play)
 	{
 		Vector2i mousePos = Mouse::getPosition(*playWindow);
@@ -193,14 +308,12 @@ void Play::Start(string playerName)
 			Text temp;
 			string tekst = client->getReceivedMessage();
 			
-
 			GlobalFunctions::setText(temp, tekst, 1000, 450 + (15 * countTexts), 15);
 			conversation.push_back(temp);
 			countTexts++;
 			client->messageReceived = false;
 			if (conversation.size() > 11)
 			{
-
 				for (int i = 0; i < conversation.size() - 1; i++)
 				{
 					conversation[i] = conversation[i + 1];
@@ -221,10 +334,119 @@ void Play::Start(string playerName)
 
 			LettersUpdate();
 			WriteControl(event);
+			if (acceptWord->ifMousePressed(playWindow))
+			{
+				cout << "Punkty: " << CheckWord() << endl;
+			}
 		}
 		
 		Display();
 	}
+}
+
+int Play::CheckWord()
+{
+	
+	cout << "Size: " << newWord->letters.size() << endl;
+	if (newWord->letters.size() > 0)
+	{
+		
+		sort(newWord->letters.begin(), newWord->letters.end(), Word::compareTwoLeters);
+		bool horizontal = false;
+
+		if (newWord->letters.size() > 1)
+		{
+			if (newWord->letters[0]->getPositionY() == newWord->letters[1]->getPositionY())
+			{
+				horizontal = true;
+			}
+			else
+				horizontal = false;
+		}
+		int pos_x = newWord->letters[0]->getPositionX();
+		int pos_y = newWord->letters[0]->getPositionY();
+		Field * begin = GetField(pos_x, pos_y);
+		if (horizontal)
+		{
+			//Wyszukanie slowa w poziome
+			while (GetLetterOnBoard(begin) != nullptr) 
+			{
+				pos_x -= 40;
+				//cout << GetLetterOnBoard(begin)->GetSign() << endl;
+				begin = GetField(pos_x, pos_y); //puste pole za pierwsze litera slowa
+			}
+			int counter = 0;
+			pos_x += 40;
+			begin = GetField(pos_x, pos_y);
+			while (GetLetterOnBoard(begin) != nullptr)
+			{
+				cout << GetLetterOnBoard(begin)->GetSign() << endl;
+				counter++;
+				pos_x += 40;
+				begin = GetField(pos_x, pos_y);
+			}
+			cout << "Ilosc liter: " << counter << endl;
+		}
+		else
+		{
+			//wyszukanie slowa w pionie
+			while (GetLetterOnBoard(begin) != nullptr)
+			{
+				pos_y -= 40;
+				//cout << GetLetterOnBoard(begin)->GetSign() << endl;
+				begin = GetField(pos_x, pos_y); //puste pole za pierwsze litera slowa
+			}
+			int counter = 0;
+			pos_y += 40;
+			begin = GetField(pos_x, pos_y);
+			while (GetLetterOnBoard(begin) != nullptr)
+			{
+				cout << GetLetterOnBoard(begin)->GetSign() << endl;
+				counter++;
+				pos_y += 40;
+				begin = GetField(pos_x, pos_y);
+			}
+			cout << "Ilosc liter: " << counter << endl;
+		}
+
+		int points = 0;
+		int premiaSlowa = 1;
+		Field * temp;
+		for (int i = 0; i < newWord->letters.size(); i++)
+		{
+			temp = GetBoardField(newWord->letters[i]);
+
+			if (temp->bonus == "LiteraX2")
+			{
+				points += newWord->letters[i]->GetPoints() * 2;
+			}
+			else if (temp->bonus == "LiteraX3")
+			{
+				points += newWord->letters[i]->GetPoints() * 3;
+			}
+			else if (temp->bonus == "WyrazX2")
+			{
+				points += newWord->letters[i]->GetPoints();
+				premiaSlowa *= 2;
+			}
+			else if (temp->bonus == "WyrazX3")
+			{
+				points += newWord->letters[i]->GetPoints();
+				premiaSlowa *= 3;
+			}
+			else
+			{
+				points += newWord->letters[i]->GetPoints();
+			}
+		}
+		points *= premiaSlowa;
+
+		newWord->deleteAllLetter();
+
+		return points;
+	}
+	return 0;
+	
 }
 void Play::WriteControl(Event & event)
 {
@@ -299,6 +521,7 @@ void Play::Display()
 	for (int i = 0; i < existLetters.size(); i++)
 		playWindow->draw(existLetters[i]);
 
+	playWindow->draw(*acceptWord);
 	/*for (int i = 0; i < 15; i++)
 	{
 		for (int j = 0; j < 15; j++)

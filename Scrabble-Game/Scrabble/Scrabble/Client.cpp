@@ -68,6 +68,33 @@ void Client::Send(string date)
 	}
 	
 }
+void Client::Listen()
+{
+	int bufferLength;
+	char * playerName;
+	int playerNameSize;
+	//int whichPlayer = 0;
+	while (true)
+	{
+		if (this->CheckIfConnected())
+		{
+			recv(mainSocket, (char*)&playerNameSize, sizeof(int), NULL);
+			playerName = new char[playerNameSize + 1];
+			playerName[playerNameSize] = '\0';
+			recv(mainSocket, playerName, playerNameSize, NULL);
+
+			recv(mainSocket, (char*)&bufferLength, sizeof(int), NULL);
+			char * buffer = new char[bufferLength + 1];
+			buffer[bufferLength] = '\0';
+			recv(mainSocket, buffer, bufferLength, NULL);
+
+			messageReceived = true;
+			receivedMessage = (string)playerName + buffer;
+
+			delete[] buffer;
+		}
+	}
+}
 void Client::Receive()
 {
 	
@@ -94,45 +121,4 @@ void Client::Receive()
 string Client::getReceivedMessage()
 {
 	return receivedMessage;
-}
-void Client::operator()(std::string task)
-{
-	
-	if (task == "Wysylanie")
-	{
-		
-	}
-	else if (task == "Odbieranie")
-	{
-		int bufferLength;
-		char * playerName;
-		int playerNameSize;
-		//int whichPlayer = 0;
-		while (true)
-		{
-			if (this->CheckIfConnected())
-			{
-				recv(mainSocket, (char*)&playerNameSize, sizeof(int), NULL);
-				playerName = new char[playerNameSize + 1];
-				playerName[playerNameSize] = '\0';
-				recv(mainSocket, playerName, playerNameSize, NULL);
-
-				recv(mainSocket, (char*)&bufferLength, sizeof(int), NULL);
-				char * buffer = new char[bufferLength + 1];
-				buffer[bufferLength] = '\0';
-				recv(mainSocket, buffer, bufferLength, NULL);
-
-				messageReceived = true;
-				receivedMessage = (string)playerName + buffer;
-				
-				//ostringstream ss;
-				//ss << whichPlayer;
-				//string liczba = ss.str();
-
-				//receivedMessage += liczba;
-				cout << buffer << endl;
-				delete[] buffer;
-			}
-		}
-	}
 }

@@ -5,6 +5,8 @@
 #include "GlobalFunctions.h"
 #include "Field.h"
 #include "Client.h"
+#include "Button.h"
+#include "Word.h"
 #include <vector>
 using namespace sf;
 using namespace std;
@@ -30,8 +32,11 @@ protected:
 
 	Field board[15][15];
 	Letter allLeters[32];
+	Letter letters[100];
 	vector<Letter> existLetters;
+	Word * newWord;
 
+	Button * acceptWord;
 	string str;
 
 	bool ourTurn;
@@ -40,8 +45,12 @@ protected:
 	void Start(string playerName);
 	void RandomLetters();
 	bool CheckLetter(Letter letter, int & x, int & y);
+	Field * GetBoardField(Letter * letter);
+	Field * GetField(int pos_x, int pos_y);
+	Letter * GetLetterOnBoard(Field *);
 	void LettersUpdate();
 	void WriteControl(Event &);
+	int CheckWord();
 
 	void PrepareBoard();
 	void SetLetters();

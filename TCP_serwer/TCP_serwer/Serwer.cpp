@@ -61,22 +61,27 @@ void Serwer::CreateSerwer()
 
 void Serwer::AcceptClient()
 {
-	acceptSocket[countClients] = SOCKET_ERROR;
-	std::cout << "Waiting for a client to connect... " << std::endl;
-	while (acceptSocket[countClients] == SOCKET_ERROR)
+	while (true)
 	{
-		acceptSocket[countClients] = accept(mainSocket, NULL, NULL);
+		if (countClients < 4)
+		{
+			acceptSocket[countClients] = SOCKET_ERROR;
+			std::cout << "Waiting for a client to connect... " << std::endl;
+			while (acceptSocket[countClients] == SOCKET_ERROR)
+			{
+				acceptSocket[countClients] = accept(mainSocket, NULL, NULL);
+			}
+
+			std::cout << "Client connected " << std::endl;
+
+
+			clientConnect[countClients] = true;
+
+			countClients += 1;
+
+			clientsThread[countClients] = new std::thread(&Serwer::ManageConversation,&*this, countClients - 1);
+		}
 	}
-
-	std::cout << "Client connected " << std::endl;
-	
-	
-	clientConnect[countClients] = true;
-
-	countClients += 1;
-
-	clientsThread[countClients] = new std::thread(*this, "Odbieranie", countClients - 1);
-
 }
 
 
@@ -118,80 +123,42 @@ void Serwer::Receive()
 	bytesSent = send(acceptSocket[0], sendbuf, strlen(sendbuf), 0);
 	std::cout << "Bytes send: " << bytesSent << std::endl;
 }
-
-void Serwer::operator()(std::string task, int index)
+void Serwer::ManageConversation(int index)
 {
-
-	if (task == "Wysylanie")
+	int bufferLength;
+	while (true)
 	{
-		while (true)
+
+		recv(acceptSocket[index], (char*)&bufferLength, sizeof(int), NULL);
+
+		char * buffer = new char[bufferLength];
+
+		recv(acceptSocket[index], buffer, bufferLength, NULL);
+
+		for (int i = 0; i < countClients; i++)
 		{
-			if (clientConnect[0])
+			if (i == index)
+				continue;
+
+			if (clientConnect[i])
 			{
-				std::cout << clientConnect[0] << " " << clientConnect[1] << " " << clientConnect[2] << " " << clientConnect[3] << std::endl;
-				Send("Witam szanownego pierwszego klienta", 0);
-			}
-			if (clientConnect[1])
-			{
-				Send("Witam szanownego drugiego klienta", 1);
-			}
-			if (clientConnect[2])
-			{
-				Send("Witam szanownego trzeciego klienta", 2);
-			}
-			if (clientConnect[3])
-			{
-				Send("Witam szanownego czwartego klienta", 3);
+				char * playerName = (char*)playersName[index].c_str();
+
+				int playerNameSize = playersName[index].length();
+
+				send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+
+				send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+				send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+
+				send(acceptSocket[i], buffer, bufferLength, NULL);
+
+				//delete[] playerName;
 			}
 		}
+
+		delete[] buffer;
+
 	}
-	else if (task == "Akceptacja")
-	{
-		while (true)
-		{
-			if (countClients < 4)
-				AcceptClient();
-		}
-	}
-	else if (task == "Odbieranie")
-	{
-		int bufferLength;
-		while (true)
-		{
-			
-			recv(acceptSocket[index], (char*)&bufferLength, sizeof(int), NULL);
-
-			char * buffer = new char[bufferLength];
-			
-			recv(acceptSocket[index], buffer, bufferLength, NULL);
-
-			for (int i = 0; i < countClients; i++)
-			{
-				if (i == index)
-					continue;
-
-				if (clientConnect[i])
-				{
-					char * playerName = (char*)playersName[index].c_str();
-				
-					int playerNameSize = playersName[index].length();
-
-					send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
-
-					send(acceptSocket[i], playerName, playerNameSize, NULL);
-
-					send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
-
-					send(acceptSocket[i], buffer, bufferLength, NULL);
-
-					//delete[] playerName;
-				}
-			}
-			
-			delete[] buffer;
-			
-		}
-		
-	}
-
 }
