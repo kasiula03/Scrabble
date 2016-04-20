@@ -4,6 +4,8 @@
 class Field : public sf::Drawable, sf::Transformable
 {
 	friend class Play;
+	friend class WordController;
+	
 	//upper-left corner
 	int pos_x; 
 	int pos_y;

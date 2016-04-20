@@ -7,6 +7,7 @@
 #include "Client.h"
 #include "Button.h"
 #include "Word.h"
+#include "WordController.h"
 #include <vector>
 using namespace sf;
 using namespace std;
@@ -31,10 +32,14 @@ protected:
 	Client * client;
 
 	Field board[15][15];
-	Letter allLeters[32];
-	Letter letters[100];
-	vector<Letter> existLetters;
+	Letter allLeters[98]; //all avaliable letters
+	bool letterOccupied[98];
+	
+	vector<Letter *> existLetters;
 	Word * newWord;
+	WordController * wordController;
+
+	int tour;
 
 	Button * acceptWord;
 	string str;

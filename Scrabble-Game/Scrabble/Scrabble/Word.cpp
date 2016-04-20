@@ -13,6 +13,10 @@ Word::Word()
 	//cout << "Total points: " << TotalPoints();
 	
 }
+Word::~Word()
+{
+	letters.clear();
+}
 bool Word::compareTwoLeters(const Letter* lt1, const Letter* lt2)
 {
 	if (lt1->pos_y == lt2->pos_y)
