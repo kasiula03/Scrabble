@@ -30,7 +30,9 @@ Play::Play()
 
 	countTexts = 0;
 	tour = 1;
+	countLetter = 0;
 	ourTurn = true;
+	roundOver = false;
 	this->canWrite = false;
 	SetLetters();
 	PrepareBoard();
@@ -41,7 +43,7 @@ Play::Play()
 	}
 
 	RandomLetters();
-	wordController = new WordController(&existLetters);
+	wordController = new WordController();
 }
 
 void Play::PrepareBoard()
@@ -118,7 +120,7 @@ void Play::PrepareBoard()
 void Play::RandomLetters()
 {
 	srand(time(NULL));
-	int count = 0;
+	
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 2; j++)
@@ -130,12 +132,14 @@ void Play::RandomLetters()
 			{
 				k = rand() % 98;
 			}
+			letterOccupied[k] = true;
 			allLeters[k].setPosition((1070 + i * 40), (300 + j * 40));
-			allLeters[k].id = count;
-			count++;
+			allLeters[k].id = countLetter;
+			countLetter++;
 			existLetters.push_back(&allLeters[k]);
 		}
 	}
+	//cout << &existLetters << endl;
 }
 
 bool Play::CheckLetter(Letter letter, int & x, int & y)
@@ -163,48 +167,7 @@ bool Play::CheckLetter(Letter letter, int & x, int & y)
 	}
 	return false;
 }
-Field * Play::GetBoardField(Letter * letter)
-{
-	for (int i = 0; i < 15; i++)
-	{
-		for (int j = 0; j < 15; j++)
-		{
-			if (letter->getPositionX() == board[i][j].getPositionX() && letter->getPositionY() == board[i][j].getPositionY())
-			{
-				return &board[i][j];
-			}
-		}
 
-	}
-	return nullptr;
-}
-Letter * Play::GetLetterOnBoard(Field * field)
-{
-	for (int i = 0; i < existLetters.size(); i++)
-	{
-		if (field->getPositionX() == existLetters[i]->getPositionX() && field->getPositionY() == existLetters[i]->getPositionY())
-		{
-			return existLetters[i];
-		}
-	}
-	return nullptr;
-}
-
-Field * Play::GetField(int pos_x, int pos_y)
-{
-	for (int i = 0; i < 15; i++)
-	{
-		for (int j = 0; j < 15; j++)
-		{
-			if (board[i][j].getPositionX() == pos_x && board[i][j].getPositionY() == pos_y)
-			{
-				return &board[i][j];
-			}
-		}
-
-	}
-	return nullptr;
-}
 
 void Play::SetLetters()
 {
@@ -373,7 +336,7 @@ void Play::LettersUpdate()
 					}
 					
 					existLetters[i]->setPosition(xx, yy);
-					existLetters[i]->placed = true;
+					//existLetters[i]->placed = true;
 					if(!(newWord->LetterExist(existLetters[i])))
 						newWord->addLetter(existLetters[i]);
 				}
@@ -385,7 +348,98 @@ void Play::LettersUpdate()
 		}
 	}
 }
+void Play::RestartLetters()
+{
+	int a = newWord->letters.size();
+	int x = 0;
+	int y = 0;
+	for (int i = 0; i < a; i++)
+	{
+		GetBoardField(newWord->letters[i])->occupied = false;
+	}
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+		{
+			if (x < 4)
+			{
+				existLetters[i]->setPosition((1070 + x * 40), (300));
+			}
+			else
+			{
+				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+				y++;
+			}
+			x++;
+		}
+	}
+	for (int i = 0; i < a; i++)
+	{
+		if (x < 4)
+		{
+			newWord->letters[i]->setPosition((1070 + x * 40), (300));
+		}
+		else
+		{
+			newWord->letters[i]->setPosition((1070 + y * 40), (340));
+			y++;
+		}
 
+	}
+}
+void Play::addLetterToStand()
+{
+	int a = newWord->letters.size();
+	int x = 0;
+	int y = 0;
+	
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+		{
+			if (x < 4)
+			{
+				existLetters[i]->setPosition((1070 + x * 40), (300));
+			}
+			else
+			{
+				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+				y++;
+			}
+			x++;
+		}
+	}
+	for (int i = 0; i < a; i++)
+	{
+		int k = rand() % 98;
+		while (letterOccupied[k])
+		{
+			if (countLetter >= 98)
+			{
+				return;
+			}
+			k = rand() % 98;
+				
+		}
+		letterOccupied[k] = true;
+
+		if (x < 4)
+		{
+			allLeters[k].setPosition((1070 + x * 40), (300));
+		}
+		else
+		{
+			allLeters[k].setPosition((1070 + y * 40), (340));
+			y++;
+		}
+		x++;
+		countLetter++;
+		allLeters[k].id = countLetter;
+		
+		existLetters.push_back(&allLeters[k]);
+		
+	}
+}
 void Play::Start(string playerName)
 {
 	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
@@ -399,12 +453,8 @@ void Play::Start(string playerName)
 	
 	this->canWrite = false;
 	newWord = new Word();
-	/*newWord->addLetter(existLetters[0]);
-	newWord->addLetter(existLetters[2]);
-	newWord->addLetter(existLetters[1]);
-	newWord->addLetter(existLetters[3]);
-	newWord->addLetter(existLetters[5]);
-	newWord->deleteLetter(existLetters[1]);*/
+	
+	GlobalFunctions::setText(textPoints, "0", 10, 0);
 	while (play)
 	{
 		Vector2i mousePos = Mouse::getPosition(*playWindow);
@@ -439,141 +489,95 @@ void Play::Start(string playerName)
 
 			LettersUpdate();
 			WriteControl(event);
+			
+			if (roundOver)
+				cout << "\n\n KONIEC" << endl;
 			if (acceptWord->ifMousePressed(playWindow))
 			{
-				if (wordController->QuickCheck(newWord))
+				if (newWord->letters.size() > 0)
 				{
-					cout << "QuickTest: TRUE" << endl;
-					if (tour == 1)
+					try
 					{
-						cout << "Punkty: " << wordController->CountPoints(board, newWord);
+						if (wordController->QuickCheck(board, &existLetters, newWord))
+						{
+							cout << "QuickTest: TRUE" << endl;
+							if (tour == 1)
+							{
+								if (newWord->letters.size() <= 1)
+								{
+									cout << "\nZA KROTKIE" << endl;
+								}
+								else
+								{
+									cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
+									this->points += wordController->CountPoints(board, &existLetters, newWord);
+								}
+								
+							}
+							if (tour > 1)
+							{
+								this->points += wordController->SolidTest(board, &existLetters, newWord);
+
+								//cout << "Punkty: " << wordController->CountPoints(board, newWord);
+							}
+							for (int i = 0; i < newWord->letters.size(); i++)
+							{
+								newWord->letters[i]->placed = true;
+							}
+							addLetterToStand();
+							tour++;
+							GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
+
+						}
+						else
+							cout << "FALSE" << endl;
 					}
-					if (tour > 1)
+					catch (string &w)
 					{
-						wordController->SolidTest(board, newWord);
+						//Obsluga bledu
+						cout << endl << w << endl;
+						RestartLetters();
 					}
+					newWord->deleteAllLetter();
+					
 				}
-				else
-					cout << "FALSE" << endl;
-				//cout << "Punkty: " << CheckWord() << endl;
-				newWord->deleteAllLetter();
-				tour++;
+				if (existLetters.size() >= 98)
+				{
+					if (CheckIfOver())
+						roundOver = true;
+				}
 			}
 		}
 		
 		Display();
+		Sleep(10);
 	}
 }
-
-int Play::CheckWord()
+Field * Play::GetBoardField(Letter * letter)
 {
-	Word * tempWord = new Word();
-	cout << "Size: " << newWord->letters.size() << endl;
-	if (newWord->letters.size() > 0)
+	for (int i = 0; i < 15; i++)
 	{
-
-		sort(newWord->letters.begin(), newWord->letters.end(), Word::compareTwoLeters); // sortujemy litery ze wzgledu na pozycje lewo-prawo lub gora-dol
-		
-		bool horizontal = false;
-
-		/*if (newWord->letters.size() > 1)
+		for (int j = 0; j < 15; j++)
 		{
-			if (newWord->letters[0]->getPositionY() == newWord->letters[1]->getPositionY())
+			if (letter->getPositionX() == board[i][j].getPositionX() && letter->getPositionY() == board[i][j].getPositionY())
 			{
-				horizontal = true;
-			}
-			else
-				horizontal = false;
-		}*/
-		int pos_x = newWord->letters[0]->getPositionX();
-		int pos_y = newWord->letters[0]->getPositionY();
-		Field * begin = GetField(pos_x, pos_y);
-		//if (horizontal)
-		//{
-			//Wyszukanie slowa w poziome
-			while (GetLetterOnBoard(begin) != nullptr) 
-			{
-				pos_x -= 40;
-				//cout << GetLetterOnBoard(begin)->GetSign() << endl;
-				begin = GetField(pos_x, pos_y); //puste pole za pierwsze litera slowa
-			}
-			int counter = 0;
-			pos_x += 40;
-			begin = GetField(pos_x, pos_y);
-			cout << "Otrzymane slowo: ";
-			while (GetLetterOnBoard(begin) != nullptr)
-			{
-				cout << GetLetterOnBoard(begin)->GetSign();
-				counter++;
-				pos_x += 40;
-				begin = GetField(pos_x, pos_y);
-			}
-			cout << "\nIlosc liter: " << counter << endl;
-		//}
-		//else
-		//{
-			begin = GetField(newWord->letters[0]->getPositionX(), newWord->letters[0]->getPositionY());
-			//wyszukanie slowa w pionie
-			while (GetLetterOnBoard(begin) != nullptr)
-			{
-				pos_y -= 40;
-				//cout << GetLetterOnBoard(begin)->GetSign() << endl;
-				begin = GetField(newWord->letters[0]->getPositionX(), pos_y); //puste pole za pierwsze litera slowa
-			}
-			counter = 0;
-			pos_y += 40;
-			begin = GetField(newWord->letters[0]->getPositionX(), pos_y);
-			cout << "Otrzymane slowo: ";
-			while (GetLetterOnBoard(begin) != nullptr)
-			{
-				cout << GetLetterOnBoard(begin)->GetSign();
-				counter++;
-				pos_y += 40;
-				begin = GetField(newWord->letters[0]->getPositionX(), pos_y);
-			}
-			cout << "\nIlosc liter: " << counter << endl;
-		//}
-
-		int points = 0;
-		int premiaSlowa = 1;
-		Field * temp;
-		for (int i = 0; i < newWord->letters.size(); i++)
-		{
-			temp = GetBoardField(newWord->letters[i]);
-
-			if (temp->bonus == "LiteraX2")
-			{
-				points += newWord->letters[i]->GetPoints() * 2;
-			}
-			else if (temp->bonus == "LiteraX3")
-			{
-				points += newWord->letters[i]->GetPoints() * 3;
-			}
-			else if (temp->bonus == "WyrazX2")
-			{
-				points += newWord->letters[i]->GetPoints();
-				premiaSlowa *= 2;
-			}
-			else if (temp->bonus == "WyrazX3")
-			{
-				points += newWord->letters[i]->GetPoints();
-				premiaSlowa *= 3;
-			}
-			else
-			{
-				points += newWord->letters[i]->GetPoints();
+				return &board[i][j];
 			}
 		}
-		points *= premiaSlowa;
 
-		
-
-		delete tempWord;
-		return points;
 	}
-
-	return 0;
-	
+	return nullptr;
+}
+bool Play::CheckIfOver()
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+		{
+			return false;
+		}
+	}
+	return true;
 }
 void Play::WriteControl(Event & event)
 {
@@ -649,6 +653,8 @@ void Play::Display()
 		playWindow->draw(*(existLetters[i]));
 
 	playWindow->draw(*acceptWord);
+
+	playWindow->draw(textPoints);
 	/*for (int i = 0; i < 15; i++)
 	{
 		for (int j = 0; j < 15; j++)

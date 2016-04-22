@@ -16,6 +16,7 @@ Client::Client()
 
 	if (!ConnectToServer()) return;
 	messageReceived = false;
+	points = 0;
 	//Send();
 }
 

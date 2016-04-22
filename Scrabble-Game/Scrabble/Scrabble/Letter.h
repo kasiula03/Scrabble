@@ -24,6 +24,8 @@ public:
 	int getPositionY();
 
 	bool operator <(const Letter& letter) const;
+	bool operator ==(const Letter & letter);
+
 	static int letterCounter;
 	int id;
 

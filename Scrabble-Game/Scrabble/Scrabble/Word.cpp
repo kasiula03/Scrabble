@@ -48,6 +48,15 @@ void Word::deleteAllLetter()
 	if(letters.size() > 0)
 		letters.clear();
 }
+void Word::DisplayWord()
+{
+	cout << endl;
+	for (int i = 0; i < letters.size(); i++)
+	{
+		cout << letters.at(i)->GetSign();
+	}
+	cout << endl;
+}
 bool Word::LetterExist(Letter * letter)
 {
 	for (int i = 0; i < letters.size(); i++)

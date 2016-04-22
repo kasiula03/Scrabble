@@ -1,6 +1,7 @@
 #pragma once
 #include "Letter.h"
 #include <vector>
+#include <iostream>
 class Word
 {
 	friend class Game;
@@ -16,6 +17,8 @@ public:
 	void deleteAllLetter();
 	bool LetterExist(Letter *);
 	vector<Letter *> letters;
+
+	void DisplayWord();
 
 	static bool compareTwoLeters(const Letter*, const Letter*);
 private:

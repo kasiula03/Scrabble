@@ -186,6 +186,7 @@ void Game::Play()
 {
 	window->close();
 
+
 	Start(playerName);
 		
 	state = MENU;

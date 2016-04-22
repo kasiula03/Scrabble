@@ -65,14 +65,23 @@ bool Letter::operator <(const Letter& letter) const
 	int x2 = letter.pos_x;
 	return x < x2;
 }
+bool Letter::operator==(const Letter & letter)
+{
+	if (this->id == letter.id)
+		return true;
+	else
+		return false;
+}
 bool Letter::dragAndDrop(sf::RenderWindow * window)
 {
-	if (Mouse::isButtonPressed(Mouse::Left))
+	if (!placed)
 	{
+		if (Mouse::isButtonPressed(Mouse::Left))
+		{
 			sf::Vector2f pos(sprite.getGlobalBounds().left, sprite.getGlobalBounds().top);
 			sf::Vector2f size(sprite.getGlobalBounds().width, sprite.getGlobalBounds().height);
-			sf::FloatRect newRect(static_cast < sf::Vector2f >(window->mapCoordsToPixel(pos)),
-				static_cast < sf::Vector2f >(window->mapCoordsToPixel(size)));
+			sf::FloatRect newRect(static_cast <sf::Vector2f>(window->mapCoordsToPixel(pos)),
+				static_cast <sf::Vector2f>(window->mapCoordsToPixel(size)));
 
 			//cout << Mouse::getPosition().x << " " << Mouse::getPosition().y << endl;
 			//cout << allLeters[0].getPositionX() << " " << allLeters[0].getPositionY() << endl;
@@ -80,7 +89,8 @@ bool Letter::dragAndDrop(sf::RenderWindow * window)
 				return true;
 			else
 				return false;
-		
+
+		}
 	}
 	return false;
 }

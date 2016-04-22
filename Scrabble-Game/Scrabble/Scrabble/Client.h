@@ -26,6 +26,7 @@ public:
 	static string receivedMessage;
 	static bool messageReceived;
 
+	int points;
 private:
 	SOCKET mainSocket;
 	sockaddr_in service;

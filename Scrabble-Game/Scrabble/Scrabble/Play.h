@@ -26,6 +26,7 @@ protected:
 	Text Tplayers[4];
 
 	Text tempTxt;
+	Text textPoints;
 
 	vector<Text> conversation;
 	int countTexts;
@@ -34,28 +35,33 @@ protected:
 	Field board[15][15];
 	Letter allLeters[98]; //all avaliable letters
 	bool letterOccupied[98];
+	int countLetter;
 	
 	vector<Letter *> existLetters;
 	Word * newWord;
 	WordController * wordController;
 
 	int tour;
+	int points;
 
 	Button * acceptWord;
 	string str;
 
 	bool ourTurn;
 	bool canWrite;
+	bool roundOver;
 
 	void Start(string playerName);
 	void RandomLetters();
 	bool CheckLetter(Letter letter, int & x, int & y);
-	Field * GetBoardField(Letter * letter);
-	Field * GetField(int pos_x, int pos_y);
-	Letter * GetLetterOnBoard(Field *);
+	void addLetterToStand();
+	bool CheckIfOver();
+	void RestartLetters();
+
 	void LettersUpdate();
 	void WriteControl(Event &);
-	int CheckWord();
+
+	Field * GetBoardField(Letter * letter);
 
 	void PrepareBoard();
 	void SetLetters();
