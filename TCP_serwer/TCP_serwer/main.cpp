@@ -13,8 +13,9 @@ int main()
 	//thread watekOdbierania3(std::ref(serwer), "Odbieranie", 2);
 	//thread watekOdbierania4(std::ref(serwer), "Odbieranie", 3);
 	thread watekAkceptacji(&Serwer::AcceptClient, &serwer);
-	//thread watekWysylania(std::ref(serwer), "Wysylanie",0);
+	thread watekWysylania(&Serwer::Send,&serwer);
 	watekAkceptacji.join();
+	
 	
 	//watekWysylania.join();	//Przylaczenie do glownego watku (czekanie na zakonczenie)
 	

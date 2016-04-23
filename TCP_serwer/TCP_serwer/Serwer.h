@@ -9,7 +9,8 @@
 #include <Windows.h>
 #include <iostream>
 #include <thread>
-
+#include "Packet.h"
+#include "TasksQueue.h"
 
 class Serwer
 {
@@ -21,17 +22,24 @@ class Serwer
 	bool sendMessage;
 
 	static int countClients;
+
+	int letterOccupied[98];
+	int countLetter;
 	
 	bool * clientConnect; 
 	std::thread * clientsThread[4];
+
+	TasksQueue sendQueue;
+	Packet packet;
 public:
 	
 	Serwer();
 
 	void CreateSerwer(); 
 	void AcceptClient();
-	void ManageConversation(int index);
+	void Manager(int index);
 	void Receive();
-	void Send(std::string,int); //send data as string
+	void Send(); 
 
+	Packet HandleMessage(std::string);
 };

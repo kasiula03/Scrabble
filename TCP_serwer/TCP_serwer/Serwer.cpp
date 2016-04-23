@@ -6,6 +6,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <sstream>
 
 int Serwer::countClients;
 SOCKET Serwer::acceptSocket[4];
@@ -20,7 +21,7 @@ Serwer::Serwer()
 		playersName[i] = "Player" + std::to_string(i) + ": ";
 	}
 	CreateSerwer();
-
+	countLetter = 0;
 	//Receive();
 
 }
@@ -79,33 +80,82 @@ void Serwer::AcceptClient()
 
 			countClients += 1;
 
-			clientsThread[countClients] = new std::thread(&Serwer::ManageConversation,&*this, countClients - 1);
+			clientsThread[countClients] = new std::thread(&Serwer::Manager,&*this, countClients - 1);
 		}
 	}
 }
 
 
-void Serwer::Send(std::string pakiet, int which)
+void Serwer::Send()
 {
-	int iResult = 2, iSendResult;
-
-	int size = pakiet.length();
-
-	char * sendbuf = new char[size]; // to wysylamy
-	strcpy(sendbuf, pakiet.c_str());
-
-	iSendResult = send(acceptSocket[which], sendbuf, 50, 0);
-
-	Sleep(200); //Zeby kolejne wysylania nie odbywaly sie za szybko, bo wtedy sa bledy
-
-	if (iSendResult == SOCKET_ERROR)
+	while (true)
 	{
-		std::cout << "Connection closing" << std::endl;
-		clientConnect[which] = false;
-		closesocket(acceptSocket[which]);
-		return;
-	}
+		if (sendQueue.buffers.size() > 0)
+		{
+			packet = HandleMessage(sendQueue.buffers.front());
+			sendQueue.buffers.erase(sendQueue.buffers.begin());
+			int index = sendQueue.whos.front();
+			sendQueue.whos.erase(sendQueue.whos.begin());
 
+
+			if (packet.getPacketType() == "LetterRequest")
+			{
+				char * playerName = (char*)playersName[index].c_str();
+
+				int playerNameSize = playersName[index].length();
+
+				send(acceptSocket[index], (char*)&playerNameSize, sizeof(int), NULL);
+				send(acceptSocket[index], playerName, playerNameSize, NULL);
+
+				int bufferLength = (packet.PacketToString().size());
+				send(acceptSocket[index], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+				std::cout << packet.PacketToString().c_str() << std::endl;
+				send(acceptSocket[index], packet.PacketToString().c_str(), bufferLength, NULL);
+				Sleep(50);
+			}
+			for (int i = 0; i < countClients; i++)
+			{
+				if (i == index)
+				{
+					continue;
+				}
+				else if (clientConnect[i])
+				{
+					if (packet.getPacketType() == "Letter")
+					{
+						char * playerName = (char*)playersName[index].c_str();
+
+						int playerNameSize = playersName[index].length();
+
+						send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+						send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+						int bufferLength = (packet.PacketToString().size());
+						send(acceptSocket[i], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+						//std::cout << packet.PacketToString().c_str() << std::endl;
+						send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+						Sleep(50);
+					}
+					if ((packet.getPacketType() == "Conversation"))
+					{
+						char * playerName = (char*)playersName[index].c_str();
+
+						int playerNameSize = playersName[index].length();
+
+						send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+
+						send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+						int bufferLength = (packet.PacketToString().size());
+						send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+
+						send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+					}
+					//delete[] playerName;
+				}
+			}
+		}
+	}
 
 }
 
@@ -123,40 +173,127 @@ void Serwer::Receive()
 	bytesSent = send(acceptSocket[0], sendbuf, strlen(sendbuf), 0);
 	std::cout << "Bytes send: " << bytesSent << std::endl;
 }
-void Serwer::ManageConversation(int index)
+Packet Serwer::HandleMessage(std::string buffer)
+{
+	srand(time(NULL));
+	Packet packet("n","n");
+	std::istringstream iss(buffer);
+	//Letter temp;
+	std::string slowo;
+	iss >> slowo;
+	packet = Packet::stringToPacket(buffer);
+	
+	if ((packet.getPacketType() == "Letter") || (packet.getPacketType() == "FirstLetter") || (packet.getPacketType() == "NewLetter"))
+	{
+		iss >> slowo;
+		iss >> slowo;
+		iss >> slowo;
+		letterOccupied[atoi(slowo.c_str())] = true;
+	}
+	if (packet.getPacketType() == "LetterRequest")
+	{
+		int k = rand() % 98;
+		while (letterOccupied[k])
+		{
+			if (countLetter >= 98)
+			{
+				packet.setData("nic");
+			}
+			k = rand() % 98;
+
+		}
+		letterOccupied[k] = true;
+		countLetter++;
+		packet.setData(std::to_string(k));
+	}
+	if (packet.getPacketType() == "Conversation")
+	{
+		int i = 0;
+		for (; i < packet.getData().length(); i++)
+		{
+			if (packet.getData()[i] == '\n')
+				break;
+		}
+		packet.setData(packet.getData().substr(0, i));
+		
+	}
+	return packet;
+}
+void Serwer::Manager(int index)
 {
 	int bufferLength;
+	//Packet packet("n", "n");
+	
 	while (true)
 	{
-
 		recv(acceptSocket[index], (char*)&bufferLength, sizeof(int), NULL);
-
+		
+		sendQueue.buffersLength.push_back(bufferLength);
 		char * buffer = new char[bufferLength];
 
 		recv(acceptSocket[index], buffer, bufferLength, NULL);
 
+		sendQueue.buffers.push_back(buffer);
+
+		sendQueue.whos.push_back(index);
+		
+		//Sleep(50);
+		/*if (packet.getPacketType() == "LetterRequest")
+		{
+			char * playerName = (char*)playersName[index].c_str();
+
+			int playerNameSize = playersName[index].length();
+
+			send(acceptSocket[index], (char*)&playerNameSize, sizeof(int), NULL);
+			send(acceptSocket[index], playerName, playerNameSize, NULL);
+
+			int bufferLength = (packet.PacketToString().size());
+			send(acceptSocket[index], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+			std::cout << packet.PacketToString().c_str() << std::endl;
+			send(acceptSocket[index], packet.PacketToString().c_str(), bufferLength, NULL);
+			Sleep(50);
+		}
+		
 		for (int i = 0; i < countClients; i++)
 		{
 			if (i == index)
-				continue;
-
-			if (clientConnect[i])
 			{
-				char * playerName = (char*)playersName[index].c_str();
+				continue;
+			}
+			else if (clientConnect[i])
+			{
+				if (packet.getPacketType() == "Letter")
+				{
+					char * playerName = (char*)playersName[index].c_str();
 
-				int playerNameSize = playersName[index].length();
+					int playerNameSize = playersName[index].length();
 
-				send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+					send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+					send(acceptSocket[i], playerName, playerNameSize, NULL);
 
-				send(acceptSocket[i], playerName, playerNameSize, NULL);
+					int bufferLength = (packet.PacketToString().size());
+					send(acceptSocket[i], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+					std::cout << packet.PacketToString().c_str() << std::endl;
+					send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+					Sleep(50);
+				}
+				if ((packet.getPacketType() == "Conversation"))
+				{
+					char * playerName = (char*)playersName[index].c_str();
 
-				send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+					int playerNameSize = playersName[index].length();
 
-				send(acceptSocket[i], buffer, bufferLength, NULL);
+					send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
 
+					send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+					send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+
+					send(acceptSocket[i], buffer, bufferLength, NULL);
+				}
 				//delete[] playerName;
 			}
-		}
+		}*/
 
 		delete[] buffer;
 

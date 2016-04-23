@@ -5,7 +5,8 @@
 #include <string>
 #include <Windows.h>
 #include <iostream>
-
+#include "Packet.h"
+#include "TaskQueue.h"
 using namespace std;
 
 class Client
@@ -26,6 +27,7 @@ public:
 	static string receivedMessage;
 	static bool messageReceived;
 
+	TasksQueue taskQueue;
 	int points;
 private:
 	SOCKET mainSocket;

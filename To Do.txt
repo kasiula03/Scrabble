@@ -5,7 +5,7 @@ tworzenie slow w pionie i w poziomie.
 
 - dodawanie liter do poczatku i konca slowa
 
-- sprawdzanie czy nowy wyraz laczy sie z jakims (wyjatek tura 1)
+- sprawdzanie czy nowy wyraz laczy sie z jakims (wyjatek tura 1) DONE
 
 - gdy podczas jednego ruchu utworzonych zostanie kilka s³ów, to punkty 
 liczone s¹ za ka¿de s³owo, a wartoœæ punktowa liter wspólnych liczona jest oddzielnie dla ka¿dego wyrazu;
@@ -13,3 +13,6 @@ liczone s¹ za ka¿de s³owo, a wartoœæ punktowa liter wspólnych liczona jest oddzi
 *- ogarniecie innej metody niz przesylanie ciagle vectora
 
 - premia s³owna liczona tylko raz (przy dostawieniu litery juz nie)
+
+
+- synchronizacja dostepnych liter !!!!!!!!!!!

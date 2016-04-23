@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <thread>
+#include <sstream>
 
 Font Play::font;
 
@@ -37,13 +38,18 @@ Play::Play()
 	SetLetters();
 	PrepareBoard();
 	
-	for (int i = 0; i < 97; i++)
+	for (int i = 0; i < 98; i++)
 	{
 		letterOccupied[i] = false;
 	}
 
-	RandomLetters();
 	wordController = new WordController();
+	
+	
+	//Packet pac(Packet::LetterToString(existLetters[0]),"Letter");
+	//cout << pac.PacketToString();
+	//pac = pac.stringToPacket(pac.PacketToString());
+	//cout << pac.StringToLetter(pac.getData());
 }
 
 void Play::PrepareBoard()
@@ -121,10 +127,13 @@ void Play::RandomLetters()
 {
 	srand(time(NULL));
 	
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 7; i++)
 	{
-		for (int j = 0; j < 2; j++)
-		{
+		client->Send ((Packet::stringToPacket("LetterRequest\n")).PacketToString());
+		
+		//Sleep(50);
+			
+			/*
 			if (i + j == 4)
 				break;
 			int k = rand() % 98;
@@ -134,10 +143,11 @@ void Play::RandomLetters()
 			}
 			letterOccupied[k] = true;
 			allLeters[k].setPosition((1070 + i * 40), (300 + j * 40));
-			allLeters[k].id = countLetter;
+			//allLeters[k].id = countLetter;
 			countLetter++;
 			existLetters.push_back(&allLeters[k]);
-		}
+			*/
+		
 	}
 	//cout << &existLetters << endl;
 }
@@ -299,6 +309,10 @@ void Play::SetLetters()
 
 	allLeters[96] = Letter('', 9);
 	allLeters[97] = Letter('¯', 5);
+	for (int i = 0; i < 98; i++)
+	{
+		allLeters[i].id = i;
+	}
 }
 
 void Play::LettersUpdate()
@@ -389,84 +403,76 @@ void Play::RestartLetters()
 }
 void Play::addLetterToStand()
 {
-	int a = newWord->letters.size();
-	int x = 0;
-	int y = 0;
-	
-	for (int i = 0; i < existLetters.size(); i++)
+	for (int i = 0; i < newWord->letters.size(); i++)
 	{
-		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
-		{
-			if (x < 4)
-			{
-				existLetters[i]->setPosition((1070 + x * 40), (300));
-			}
-			else
-			{
-				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
-				y++;
-			}
-			x++;
-		}
-	}
-	for (int i = 0; i < a; i++)
-	{
-		int k = rand() % 98;
-		while (letterOccupied[k])
-		{
-			if (countLetter >= 98)
-			{
-				return;
-			}
-			k = rand() % 98;
-				
-		}
-		letterOccupied[k] = true;
-
-		if (x < 4)
-		{
-			allLeters[k].setPosition((1070 + x * 40), (300));
-		}
-		else
-		{
-			allLeters[k].setPosition((1070 + y * 40), (340));
-			y++;
-		}
-		x++;
-		countLetter++;
-		allLeters[k].id = countLetter;
-		
-		existLetters.push_back(&allLeters[k]);
-		
+		client->Send((Packet::stringToPacket("LetterRequest\n")).PacketToString());
+		//Sleep(50);
 	}
 }
-void Play::Start(string playerName)
+void Play::HandleReceivePacket()
 {
-	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
-	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
-	bool play = true;
-	//string str = "";
-	
-	//GlobalFunctions::setText(txt, str, 1100, 500, 15);
-	Event event;
-	allLeters[0].setPosition(240, 30);
-	
-	this->canWrite = false;
-	newWord = new Word();
-	
-	GlobalFunctions::setText(textPoints, "0", 10, 0);
-	while (play)
+	Text temp;
+	if (client->taskQueue.buffers.size() > 0)
 	{
-		Vector2i mousePos = Mouse::getPosition(*playWindow);
-		if (client->messageReceived)
+		string tekst = client->taskQueue.buffers.front();
+		client->taskQueue.buffers.erase(client->taskQueue.buffers.begin());
+		cout << tekst << endl;
+		std::istringstream iss(tekst);
+		string slowo;
+		iss >> slowo;
+		tekst = tekst.substr(slowo.length() + 1, tekst.length());
+		Packet packet = Packet::stringToPacket(tekst);
+		//client->messageReceived = false;
+		if (packet.getPacketType() == "Letter")
 		{
-			Text temp;
-			string tekst = client->getReceivedMessage();
-			
-			GlobalFunctions::setText(temp, tekst, 1000, 450 + (15 * countTexts), 15);
+			Letter newL = Packet::StringToLetter(packet.getData());
+			allLeters[newL.id].setPosition(newL.getPositionX(), newL.getPositionY());
+			allLeters[newL.id].placed = true;
+			existLetters.push_back(&allLeters[newL.id]);
+			if (GetBoardField(&allLeters[newL.id]) != nullptr)
+				GetBoardField(&allLeters[newL.id])->occupied = true;
+			letterOccupied[newL.id] = true;
+			//cout << newL.getPositionX() << " " << newL.id << endl;
+		}
+		else if (packet.getPacketType() == "LetterRequest")
+		{
+			int a = atoi(packet.getData().c_str());
+			int x = 0;
+			int y = 0;
+			for (int i = 0; i < existLetters.size(); i++)
+			{
+				if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+				{
+					if (x < 4)
+					{
+						existLetters[i]->setPosition((1070 + x * 40), (300));
+					}
+					else
+					{
+						existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+						y++;
+					}
+					x++;
+				}
+			}
+
+
+
+			allLeters[a].setPosition((1070), (300));
+			allLeters[a].placed = false;
+
+
+			countLetter++;
+			existLetters.push_back(&allLeters[a]);
+
+			RestartLetters();
+		}
+		else if (packet.getPacketType() == "Conversation")
+		{
+			GlobalFunctions::setText(temp, slowo + " " + packet.getData(), 1000, 450 + (15 * countTexts), 15);
 			conversation.push_back(temp);
 			countTexts++;
-			client->messageReceived = false;
+
 			if (conversation.size() > 11)
 			{
 				for (int i = 0; i < conversation.size() - 1; i++)
@@ -479,6 +485,28 @@ void Play::Start(string playerName)
 
 			}
 		}
+	}
+}
+void Play::Start(string playerName)
+{
+	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
+	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
+	bool play = true;
+	
+	Event event;
+	//allLeters[0].setPosition(240, 30);
+	
+	this->canWrite = false;
+	newWord = new Word();
+	
+	GlobalFunctions::setText(textPoints, "0", 10, 0);
+
+	RandomLetters();
+	while (play)
+	{
+		Vector2i mousePos = Mouse::getPosition(*playWindow);
+		HandleReceivePacket();
+		
 		while (playWindow->pollEvent(event)) 
 		{
 			if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -494,63 +522,80 @@ void Play::Start(string playerName)
 				cout << "\n\n KONIEC" << endl;
 			if (acceptWord->ifMousePressed(playWindow))
 			{
-				if (newWord->letters.size() > 0)
+				for (int i = 0; i < existLetters.size(); i++)
 				{
-					try
-					{
-						if (wordController->QuickCheck(board, &existLetters, newWord))
-						{
-							cout << "QuickTest: TRUE" << endl;
-							if (tour == 1)
-							{
-								if (newWord->letters.size() <= 1)
-								{
-									cout << "\nZA KROTKIE" << endl;
-								}
-								else
-								{
-									cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
-									this->points += wordController->CountPoints(board, &existLetters, newWord);
-								}
-								
-							}
-							if (tour > 1)
-							{
-								this->points += wordController->SolidTest(board, &existLetters, newWord);
-
-								//cout << "Punkty: " << wordController->CountPoints(board, newWord);
-							}
-							for (int i = 0; i < newWord->letters.size(); i++)
-							{
-								newWord->letters[i]->placed = true;
-							}
-							addLetterToStand();
-							tour++;
-							GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
-
-						}
-						else
-							cout << "FALSE" << endl;
-					}
-					catch (string &w)
-					{
-						//Obsluga bledu
-						cout << endl << w << endl;
-						RestartLetters();
-					}
-					newWord->deleteAllLetter();
-					
+					cout << existLetters[i]->id << " ";
 				}
-				if (existLetters.size() >= 98)
+				cout << endl;
+				AcceptWord();
+				for (int i = 0; i < newWord->letters.size();i++)
 				{
-					if (CheckIfOver())
-						roundOver = true;
+					Packet packet(Packet::LetterToString(newWord->letters[i]), "Letter");
+					client->Send(packet.PacketToString());
+					Sleep(20);
 				}
+				newWord->deleteAllLetter();
+				
 			}
 		}
 		
 		Display();
 		Sleep(10);
+	}
+}
+void Play::AcceptWord()
+{
+	if (newWord->letters.size() > 0)
+	{
+		try
+		{
+			if (wordController->QuickCheck(board, &existLetters, newWord))
+			{
+				cout << "QuickTest: TRUE" << endl;
+				if (tour == 1)
+				{
+					if (newWord->letters.size() <= 1)
+					{
+						cout << "\nZA KROTKIE" << endl;
+					}
+					else
+					{
+						cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
+						this->points += wordController->CountPoints(board, &existLetters, newWord);
+					}
+
+				}
+				if (tour > 1)
+				{
+					this->points += wordController->SolidTest(board, &existLetters, newWord);
+
+					//cout << "Punkty: " << wordController->CountPoints(board, newWord);
+				}
+				for (int i = 0; i < newWord->letters.size(); i++)
+				{
+					newWord->letters[i]->placed = true;
+				}
+				addLetterToStand();
+				tour++;
+				GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
+
+			}
+			else
+				cout << "FALSE" << endl;
+		}
+		catch (string &w)
+		{
+			//Obsluga bledu
+			cout << endl << w << endl;
+			RestartLetters();
+		}
+		
+
+	}
+	if (existLetters.size() >= 98)
+	{
+		if (CheckIfOver())
+			roundOver = true;
 	}
 }
 Field * Play::GetBoardField(Letter * letter)
@@ -615,7 +660,8 @@ void Play::WriteControl(Event & event)
 	{
 		Text temp;
 		conversation.push_back(temp);
-		std::thread sendThread(&Client::Send, &*client, str);
+		Packet packet(str+"\n", "Conversation");
+		std::thread sendThread(&Client::Send, &*client, packet.PacketToString());
 		sendThread.join();
 		//client->Send(str);
 		GlobalFunctions::setText(conversation[this->countTexts],"Ja: " + str, 1000, 450 + (15 * countTexts), 15);

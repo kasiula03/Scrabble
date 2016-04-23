@@ -89,9 +89,9 @@ void Client::Listen()
 			buffer[bufferLength] = '\0';
 			recv(mainSocket, buffer, bufferLength, NULL);
 
-			messageReceived = true;
 			receivedMessage = (string)playerName + buffer;
 
+			taskQueue.buffers.push_back(receivedMessage);
 			delete[] buffer;
 		}
 	}

@@ -57,7 +57,9 @@ protected:
 	void addLetterToStand();
 	bool CheckIfOver();
 	void RestartLetters();
+	void HandleReceivePacket();
 
+	void AcceptWord();
 	void LettersUpdate();
 	void WriteControl(Event &);
 
