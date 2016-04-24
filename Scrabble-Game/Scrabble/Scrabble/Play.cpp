@@ -37,6 +37,10 @@ Play::Play()
 	this->canWrite = false;
 	SetLetters();
 	PrepareBoard();
+
+	waitingForAnswer = false;
+	answer = false;
+	correctWords = false;
 	
 	for (int i = 0; i < 98; i++)
 	{
@@ -44,8 +48,7 @@ Play::Play()
 	}
 
 	wordController = new WordController();
-	
-	
+
 	//Packet pac(Packet::LetterToString(existLetters[0]),"Letter");
 	//cout << pac.PacketToString();
 	//pac = pac.stringToPacket(pac.PacketToString());
@@ -181,134 +184,134 @@ bool Play::CheckLetter(Letter letter, int & x, int & y)
 
 void Play::SetLetters()
 {
-	allLeters[0] = Letter('A', 1);
-	allLeters[1] = Letter('A', 1);
-	allLeters[2] = Letter('A', 1);
-	allLeters[3] = Letter('A', 1);
-	allLeters[4] = Letter('A', 1);
-	allLeters[5] = Letter('A', 1);
-	allLeters[6] = Letter('A', 1);
-	allLeters[7] = Letter('A', 1);
-	allLeters[8] = Letter('A', 1);
+	allLeters[0] = Letter('a', 1);
+	allLeters[1] = Letter('a', 1);
+	allLeters[2] = Letter('a', 1);
+	allLeters[3] = Letter('a', 1);
+	allLeters[4] = Letter('a', 1);
+	allLeters[5] = Letter('a', 1);
+	allLeters[6] = Letter('a', 1);
+	allLeters[7] = Letter('a', 1);
+	allLeters[8] = Letter('a', 1);
 
-	allLeters[9] = Letter('¥', 5);
+	allLeters[9] = Letter('¹', 5);
 
-	allLeters[10] = Letter('B', 3);
-	allLeters[11] = Letter('B', 3);
+	allLeters[10] = Letter('b', 3);
+	allLeters[11] = Letter('b', 3);
 
-	allLeters[12] = Letter('C', 2);
-	allLeters[13] = Letter('C', 2);
-	allLeters[14] = Letter('C', 2);
+	allLeters[12] = Letter('c', 2);
+	allLeters[13] = Letter('c', 2);
+	allLeters[14] = Letter('c', 2);
 
-	allLeters[15] = Letter('Æ', 6);
+	allLeters[15] = Letter('æ', 6);
 
-	allLeters[16] = Letter('D', 2);
-	allLeters[17] = Letter('D', 2);
-	allLeters[18] = Letter('D', 2);
+	allLeters[16] = Letter('d', 2);
+	allLeters[17] = Letter('d', 2);
+	allLeters[18] = Letter('d', 2);
 
-	allLeters[19] = Letter('E', 1);
-	allLeters[20] = Letter('E', 1);
-	allLeters[21] = Letter('E', 1);
-	allLeters[22] = Letter('E', 1);
-	allLeters[23] = Letter('E', 1);
-	allLeters[24] = Letter('E', 1);
-	allLeters[25] = Letter('E', 1);
+	allLeters[19] = Letter('e', 1);
+	allLeters[20] = Letter('e', 1);
+	allLeters[21] = Letter('e', 1);
+	allLeters[22] = Letter('e', 1);
+	allLeters[23] = Letter('e', 1);
+	allLeters[24] = Letter('e', 1);
+	allLeters[25] = Letter('e', 1);
 
-	allLeters[26] = Letter('Ê', 5);
+	allLeters[26] = Letter('ê', 5);
 
-	allLeters[27] = Letter('F', 5);
+	allLeters[27] = Letter('f', 5);
 
-	allLeters[28] = Letter('G', 3);
-	allLeters[29] = Letter('G', 3);
+	allLeters[28] = Letter('g', 3);
+	allLeters[29] = Letter('g', 3);
 
-	allLeters[30] = Letter('H', 3);
-	allLeters[31] = Letter('H', 3);
+	allLeters[30] = Letter('h', 3);
+	allLeters[31] = Letter('h', 3);
 
-	allLeters[32] = Letter('I', 1);
-	allLeters[33] = Letter('I', 1);
-	allLeters[34] = Letter('I', 1);
-	allLeters[35] = Letter('I', 1);
-	allLeters[36] = Letter('I', 1);
-	allLeters[37] = Letter('I', 1);
-	allLeters[38] = Letter('I', 1);
-	allLeters[39] = Letter('I', 1);
+	allLeters[32] = Letter('i', 1);
+	allLeters[33] = Letter('i', 1);
+	allLeters[34] = Letter('i', 1);
+	allLeters[35] = Letter('i', 1);
+	allLeters[36] = Letter('i', 1);
+	allLeters[37] = Letter('i', 1);
+	allLeters[38] = Letter('i', 1);
+	allLeters[39] = Letter('i', 1);
 
-	allLeters[40] = Letter('J', 3);
-	allLeters[41] = Letter('J', 3);
+	allLeters[40] = Letter('j', 3);
+	allLeters[41] = Letter('j', 3);
 
-	allLeters[42] = Letter('K', 2);
-	allLeters[43] = Letter('K', 2);
-	allLeters[44] = Letter('K', 2);
+	allLeters[42] = Letter('k', 2);
+	allLeters[43] = Letter('k', 2);
+	allLeters[44] = Letter('k', 2);
 
-	allLeters[45] = Letter('L', 2);
-	allLeters[46] = Letter('L', 2);
-	allLeters[47] = Letter('L', 2);
+	allLeters[45] = Letter('l', 2);
+	allLeters[46] = Letter('l', 2);
+	allLeters[47] = Letter('l', 2);
 
-	allLeters[48] = Letter('£', 3);
-	allLeters[49] = Letter('L', 2);
+	allLeters[48] = Letter('³', 3);
+	allLeters[49] = Letter('³', 3);
 
-	allLeters[50] = Letter('M', 2);
-	allLeters[51] = Letter('M', 2);
-	allLeters[52] = Letter('M', 2);
+	allLeters[50] = Letter('m', 2);
+	allLeters[51] = Letter('m', 2);
+	allLeters[52] = Letter('m', 2);
 
-	allLeters[53] = Letter('N', 1);
-	allLeters[54] = Letter('N', 1);
-	allLeters[55] = Letter('N', 1);
-	allLeters[56] = Letter('N', 1);
-	allLeters[57] = Letter('N', 1);
+	allLeters[53] = Letter('n', 1);
+	allLeters[54] = Letter('n', 1);
+	allLeters[55] = Letter('n', 1);
+	allLeters[56] = Letter('n', 1);
+	allLeters[57] = Letter('n', 1);
 
-	allLeters[58] = Letter('Ñ', 7);
+	allLeters[58] = Letter('ñ', 7);
 
-	allLeters[59] = Letter('O', 1);
-	allLeters[60] = Letter('O', 1);
-	allLeters[61] = Letter('O', 1);
-	allLeters[62] = Letter('O', 1);
-	allLeters[63] = Letter('O', 1);
-	allLeters[64] = Letter('O', 1);
+	allLeters[59] = Letter('o', 1);
+	allLeters[60] = Letter('o', 1);
+	allLeters[61] = Letter('o', 1);
+	allLeters[62] = Letter('o', 1);
+	allLeters[63] = Letter('o', 1);
+	allLeters[64] = Letter('o', 1);
 
-	allLeters[65] = Letter('Ó', 5);
+	allLeters[65] = Letter('ó', 5);
 
-	allLeters[66] = Letter('P', 2);
-	allLeters[67] = Letter('P', 2);
-	allLeters[68] = Letter('P', 2);
+	allLeters[66] = Letter('p', 2);
+	allLeters[67] = Letter('p', 2);
+	allLeters[68] = Letter('p', 2);
 
-	allLeters[69] = Letter('R', 1);
-	allLeters[70] = Letter('R', 1);
-	allLeters[71] = Letter('R', 1);
-	allLeters[72] = Letter('R', 1);
+	allLeters[69] = Letter('r', 1);
+	allLeters[70] = Letter('r', 1);
+	allLeters[71] = Letter('r', 1);
+	allLeters[72] = Letter('r', 1);
 
-	allLeters[73] = Letter('S', 1);
-	allLeters[74] = Letter('S', 1);
-	allLeters[75] = Letter('S', 1);
-	allLeters[76] = Letter('S', 1);
+	allLeters[73] = Letter('s', 1);
+	allLeters[74] = Letter('s', 1);
+	allLeters[75] = Letter('s', 1);
+	allLeters[76] = Letter('s', 1);
 
-	allLeters[77] = Letter('Œ', 5);
+	allLeters[77] = Letter('œ', 5);
 
-	allLeters[78] = Letter('T', 2);
-	allLeters[79] = Letter('T', 2);
-	allLeters[80] = Letter('T', 2);
+	allLeters[78] = Letter('t', 2);
+	allLeters[79] = Letter('t', 2);
+	allLeters[80] = Letter('t', 2);
 
-	allLeters[81] = Letter('U', 3);
-	allLeters[82] = Letter('U', 3);
+	allLeters[81] = Letter('u', 3);
+	allLeters[82] = Letter('u', 3);
 
-	allLeters[83] = Letter('W', 1);
-	allLeters[84] = Letter('W', 1);
-	allLeters[85] = Letter('W', 1);
-	allLeters[86] = Letter('W', 1);
+	allLeters[83] = Letter('w', 1);
+	allLeters[84] = Letter('w', 1);
+	allLeters[85] = Letter('w', 1);
+	allLeters[86] = Letter('w', 1);
 
-	allLeters[87] = Letter('Y', 2);
-	allLeters[88] = Letter('Y', 2);
-	allLeters[89] = Letter('Y', 2);
-	allLeters[90] = Letter('Y', 2);
+	allLeters[87] = Letter('y', 2);
+	allLeters[88] = Letter('y', 2);
+	allLeters[89] = Letter('y', 2);
+	allLeters[90] = Letter('y', 2);
 
-	allLeters[91] = Letter('Z', 1);
-	allLeters[92] = Letter('Z', 1);
-	allLeters[93] = Letter('Z', 1);
-	allLeters[94] = Letter('Z', 1);
-	allLeters[95] = Letter('Z', 1);
+	allLeters[91] = Letter('z', 1);
+	allLeters[92] = Letter('z', 1);
+	allLeters[93] = Letter('z', 1);
+	allLeters[94] = Letter('z', 1);
+	allLeters[95] = Letter('z', 1);
 
-	allLeters[96] = Letter('', 9);
-	allLeters[97] = Letter('¯', 5);
+	allLeters[96] = Letter('Ÿ', 9);
+	allLeters[97] = Letter('¿', 5);
 	for (int i = 0; i < 98; i++)
 	{
 		allLeters[i].id = i;
@@ -412,11 +415,11 @@ void Play::addLetterToStand()
 void Play::HandleReceivePacket()
 {
 	Text temp;
-	if (client->taskQueue.buffers.size() > 0)
+	if (client->taskQueue.buffers.size() > 0 && client->taskQueue.buffers.front().length() > 0)
 	{
 		string tekst = client->taskQueue.buffers.front();
 		client->taskQueue.buffers.erase(client->taskQueue.buffers.begin());
-		cout << tekst << endl;
+		//cout << tekst << endl;
 		std::istringstream iss(tekst);
 		string slowo;
 		iss >> slowo;
@@ -433,6 +436,14 @@ void Play::HandleReceivePacket()
 				GetBoardField(&allLeters[newL.id])->occupied = true;
 			letterOccupied[newL.id] = true;
 			//cout << newL.getPositionX() << " " << newL.id << endl;
+		}
+		else if (packet.getPacketType() == "WordCheck")
+		{
+			if (packet.getData() == "Correct")
+				correctWords = true;
+			else
+				correctWords = false;
+			answer = true;
 		}
 		else if (packet.getPacketType() == "LetterRequest")
 		{
@@ -502,6 +513,9 @@ void Play::Start(string playerName)
 	GlobalFunctions::setText(textPoints, "0", 10, 0);
 
 	RandomLetters();
+	tour = 1;
+	answer = false;
+	waitingForAnswer = false;
 	while (play)
 	{
 		Vector2i mousePos = Mouse::getPosition(*playWindow);
@@ -528,15 +542,40 @@ void Play::Start(string playerName)
 				}
 				cout << endl;
 				AcceptWord();
-				for (int i = 0; i < newWord->letters.size();i++)
-				{
-					Packet packet(Packet::LetterToString(newWord->letters[i]), "Letter");
-					client->Send(packet.PacketToString());
-					Sleep(20);
-				}
-				newWord->deleteAllLetter();
+				
+				waitingForAnswer = true;
 				
 			}
+			if (waitingForAnswer && answer)
+			{
+				if (correctWords)
+				{
+					for (int i = 0; i < newWord->letters.size(); i++)
+					{
+						newWord->letters[i]->placed = true;
+					}
+					addLetterToStand();
+					tour++;
+					GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
+					correctWords = false;
+					for (int i = 0; i < newWord->letters.size();i++)
+					{
+						Packet packet(Packet::LetterToString(newWord->letters[i]), "Letter");
+						client->Send(packet.PacketToString());
+						Sleep(20);
+					}
+					newWord->deleteAllLetter();
+				}
+				else
+				{
+					cout << endl << "Przynajmniej jedno ze slow nie ma w slowniku" << endl;
+					RestartLetters();
+					newWord->deleteAllLetter();
+				}
+				waitingForAnswer = false;
+				answer = false;
+			}
+
 		}
 		
 		Display();
@@ -563,7 +602,10 @@ void Play::AcceptWord()
 						cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
 						this->points += wordController->CountPoints(board, &existLetters, newWord);
 					}
-
+					string word = "";
+					for (int i = 0; i < newWord->letters.size(); i++)
+						word += newWord->letters[i]->GetSign();
+					wordController->wordForCheck.push_back(word);
 				}
 				if (tour > 1)
 				{
@@ -571,14 +613,15 @@ void Play::AcceptWord()
 
 					//cout << "Punkty: " << wordController->CountPoints(board, newWord);
 				}
-				for (int i = 0; i < newWord->letters.size(); i++)
+				for (int i = 0; i < wordController->wordForCheck.size(); i++)
 				{
-					newWord->letters[i]->placed = true;
+					Packet newPack(wordController->wordForCheck.at(i)+"\n", "WordCheck");
+					client->Send(newPack.PacketToString());
+					Sleep(10);
 				}
-				addLetterToStand();
-				tour++;
-				GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
-
+				wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
+				
+				
 			}
 			else
 				cout << "FALSE" << endl;
@@ -590,6 +633,7 @@ void Play::AcceptWord()
 			RestartLetters();
 		}
 		
+
 
 	}
 	if (existLetters.size() >= 98)

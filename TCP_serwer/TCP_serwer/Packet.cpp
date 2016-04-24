@@ -43,6 +43,7 @@ Packet Packet::stringToPacket(std::string pack)
 			break;
 	}
 	packet.setPacketType(pack.substr(0, i));
-	packet.data = pack.substr(i + 1, pack.length());
+	if(pack.length() > 0)
+		packet.data = pack.substr(i + 1, pack.length());
 	return packet;
 }

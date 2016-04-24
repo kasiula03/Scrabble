@@ -11,6 +11,7 @@
 #include <thread>
 #include "Packet.h"
 #include "TasksQueue.h"
+#include "Dictionary.h"
 
 class Serwer
 {
@@ -29,6 +30,7 @@ class Serwer
 	bool * clientConnect; 
 	std::thread * clientsThread[4];
 
+	Dictionary * dictionary;
 	TasksQueue sendQueue;
 	Packet packet;
 public:

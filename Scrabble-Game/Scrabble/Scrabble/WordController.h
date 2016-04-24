@@ -2,6 +2,7 @@
 
 #include "Word.h"
 #include "Field.h"
+#include <vector>
 class WordController
 {
 	
@@ -19,6 +20,8 @@ public:
 	Word * CheckVertical(Field board[15][15], vector <Letter*>* existLetters,Letter * letter);
 
 	bool CheckIfLetterExist(Word * word, Letter * letter);
+
+	vector<string> wordForCheck;
 private:
 	bool horizontal;
 	bool vertical;

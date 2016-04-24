@@ -12,7 +12,7 @@ Game::Game(int a)
 {
 	client = new Client();
 	Play::client = this->client;
-
+	
 	SetLetters();
 	GlobalFunctions::GlobalFunctions();
 	state = MENU;
@@ -31,6 +31,7 @@ Game::Game(int a)
 
 	gameThread = new thread(*this); 
 	gameThread->join();
+
 
 	
 }

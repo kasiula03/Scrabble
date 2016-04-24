@@ -8,6 +8,7 @@
 #include "Button.h"
 #include "Word.h"
 #include "WordController.h"
+
 #include <vector>
 using namespace sf;
 using namespace std;
@@ -50,6 +51,9 @@ protected:
 	bool ourTurn;
 	bool canWrite;
 	bool roundOver;
+	bool correctWords;
+	bool waitingForAnswer;
+	bool answer;
 
 	void Start(string playerName);
 	void RandomLetters();

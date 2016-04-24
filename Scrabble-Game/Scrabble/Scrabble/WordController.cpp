@@ -74,7 +74,9 @@ bool WordController::QuickCheck(Field board[15][15], vector <Letter*>* existLett
 		return false;
 	}
 	else
+	{
 		return true;
+	}
 
 }
 
@@ -183,7 +185,13 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 			tempWord = CheckVertical(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
 
 			if (tempWord != nullptr)
+			{
+				string word = "";
 				tempWord->DisplayWord();
+				for (int i = 0; i < tempWord->letters.size(); i++)
+					word += tempWord->letters[i]->GetSign();
+				wordForCheck.push_back(word);
+			}
 			if(tempWord != nullptr)
 				if (tempWord->letters.size() > 1)
 				{
@@ -197,7 +205,13 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 		Field * begin = GetField(board, existLetters, pos_x, pos_y);
 		tempWord = CheckHorizontal(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
 		if (tempWord != nullptr)
+		{
+			string word = "";
 			tempWord->DisplayWord();
+			for (int i = 0; i < tempWord->letters.size(); i++)
+				word += tempWord->letters[i]->GetSign();
+			wordForCheck.push_back(word);
+		}
 		if (tempWord != nullptr)
 			if (tempWord->letters.size() > 1)
 			{
@@ -215,7 +229,13 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 
 			tempWord = CheckHorizontal(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
 			if (tempWord != nullptr)
+			{
+				string word = "";
 				tempWord->DisplayWord();
+				for (int i = 0; i < tempWord->letters.size(); i++)
+					word += tempWord->letters[i]->GetSign();
+				wordForCheck.push_back(word);
+			}
 			if (tempWord != nullptr)
 				if (tempWord->letters.size() > 1)
 				{
@@ -230,7 +250,13 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 		Field * begin = GetField(board, existLetters, pos_x, pos_y);
 		tempWord = CheckVertical(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
 		if (tempWord != nullptr)
+		{
+			string word = "";
 			tempWord->DisplayWord();
+			for (int i = 0; i < tempWord->letters.size(); i++)
+				word += tempWord->letters[i]->GetSign();
+			wordForCheck.push_back(word);
+		}
 		if (tempWord != nullptr)
 			if (tempWord->letters.size() > 1)
 			{
@@ -246,8 +272,14 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 		int pos_y = word->letters[0]->getPositionY();
 		Field * begin = GetField(board, existLetters, pos_x, pos_y);
 		tempWord = CheckVertical(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
-		if(tempWord != nullptr)
+		if (tempWord != nullptr)
+		{
+			string word = "";
 			tempWord->DisplayWord();
+			for (int i = 0; i < tempWord->letters.size(); i++)
+				word += tempWord->letters[i]->GetSign();
+			wordForCheck.push_back(word);
+		}
 		if (tempWord != nullptr)
 			if (tempWord->letters.size() > 1)
 			{
@@ -256,7 +288,13 @@ int WordController::SolidTest(Field board[15][15], vector <Letter*>* existLetter
 			}
 		tempWord =  CheckHorizontal(board, existLetters, GetLetterOnBoard(board, existLetters, begin));
 		if (tempWord != nullptr)
+		{
+			string word = "";
 			tempWord->DisplayWord();
+			for (int i = 0; i < tempWord->letters.size(); i++)
+				word += tempWord->letters[i]->GetSign();
+			wordForCheck.push_back(word);
+		}
 		if (tempWord != nullptr)
 			if (tempWord->letters.size() > 1)
 			{
