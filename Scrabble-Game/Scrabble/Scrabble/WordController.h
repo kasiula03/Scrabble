@@ -21,7 +21,7 @@ public:
 
 	bool CheckIfLetterExist(Word * word, Letter * letter);
 
-	vector<string> wordForCheck;
+	vector<Word *> wordForCheck;
 private:
 	bool horizontal;
 	bool vertical;

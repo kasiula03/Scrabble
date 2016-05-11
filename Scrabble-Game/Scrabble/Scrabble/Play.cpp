@@ -403,6 +403,7 @@ void Play::RestartLetters()
 		}
 
 	}
+	newWord->deleteAllLetter();
 }
 void Play::addLetterToStand()
 {
@@ -466,8 +467,6 @@ void Play::HandleReceivePacket()
 					x++;
 				}
 			}
-
-
 
 			allLeters[a].setPosition((1070), (300));
 			allLeters[a].placed = false;
@@ -556,7 +555,7 @@ void Play::Start(string playerName)
 					}
 					addLetterToStand();
 					tour++;
-					GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
+					
 					correctWords = false;
 					for (int i = 0; i < newWord->letters.size();i++)
 					{
@@ -564,6 +563,13 @@ void Play::Start(string playerName)
 						client->Send(packet.PacketToString());
 						Sleep(20);
 					}
+						
+					for (int i = 0; i < wordController->wordForCheck.size();i++)
+					{
+						//to zmienialam ze stringa na word*
+						this->points += wordController->CountPoints(board, &existLetters, wordController->wordForCheck.at(i));
+					}
+					GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
 					newWord->deleteAllLetter();
 				}
 				else
@@ -574,8 +580,8 @@ void Play::Start(string playerName)
 				}
 				waitingForAnswer = false;
 				answer = false;
+				wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
 			}
-
 		}
 		
 		Display();
@@ -599,28 +605,30 @@ void Play::AcceptWord()
 					}
 					else
 					{
-						cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
-						this->points += wordController->CountPoints(board, &existLetters, newWord);
+						wordController->wordForCheck.push_back(newWord);
+						//cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
+						//this->points += wordController->CountPoints(board, &existLetters, newWord);
 					}
-					string word = "";
-					for (int i = 0; i < newWord->letters.size(); i++)
-						word += newWord->letters[i]->GetSign();
-					wordController->wordForCheck.push_back(word);
+					
+					
 				}
 				if (tour > 1)
 				{
-					this->points += wordController->SolidTest(board, &existLetters, newWord);
+					wordController->SolidTest(board, &existLetters, newWord);
 
 					//cout << "Punkty: " << wordController->CountPoints(board, newWord);
 				}
 				for (int i = 0; i < wordController->wordForCheck.size(); i++)
 				{
-					Packet newPack(wordController->wordForCheck.at(i)+"\n", "WordCheck");
+					string word = "";
+					for (int j = 0; j < wordController->wordForCheck.at(i)->letters.size(); j++)
+					{
+						word += wordController->wordForCheck.at(i)->letters[j]->GetSign();
+					}
+					Packet newPack(word+"\n", "WordCheck");
 					client->Send(newPack.PacketToString());
 					Sleep(10);
 				}
-				wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
-				
 				
 			}
 			else

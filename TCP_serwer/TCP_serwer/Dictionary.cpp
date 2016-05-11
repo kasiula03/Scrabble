@@ -50,20 +50,24 @@ bool Dictionary::CheckWord(std::string word)
 		}
 	}
 	word = word.substr(0, x);
+	std::cout << "Slowo: " << word << std::endl;
 	int which = 0;
-	for (int i = 0; i < 30; i++)
+	for (int j = 0; j < 2; j++)
 	{
-		if ((words[i].at(0))[0] == word[0])
+		for (int i = 0; i < 30; i++)
 		{
-			which = i;
-			break;
+			if ((words[i].at(0))[0] == word[0])
+			{
+				which = i;
+				break;
+			}
+		}
+		for (int i = 0; i < words[which].size(); i++)
+		{
+			if (words[which].at(i) == word)
+				return true;
 		}
 	}
-	for (int i = 0; i < words[which].size(); i++)
-	{
-		if (words[which].at(i) == word)
-			return true;
-	}
-	
-		return false;
+	std::cout << word.size() << std::endl;
+	return false;
 }

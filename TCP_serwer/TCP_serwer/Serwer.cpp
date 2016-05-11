@@ -96,67 +96,72 @@ void Serwer::Send()
 		if (sendQueue.buffers.size() > 0 && sendQueue.whos.size() > 0)
 		{
 			packet = HandleMessage(sendQueue.buffers.front());
-			sendQueue.buffers.erase(sendQueue.buffers.begin());
-			int index = sendQueue.whos.front();
-			sendQueue.whos.erase(sendQueue.whos.begin());
-
-
-			if (packet.getPacketType() == "LetterRequest" || packet.getPacketType() == "WordCheck")
+			if (packet.getPacketType() != "error")
 			{
-				char * playerName = (char*)playersName[index].c_str();
 
-				int playerNameSize = playersName[index].length();
+				sendQueue.buffers.erase(sendQueue.buffers.begin());
+				int index = sendQueue.whos.front();
+				sendQueue.whos.erase(sendQueue.whos.begin());
 
-				send(acceptSocket[index], (char*)&playerNameSize, sizeof(int), NULL);
-				send(acceptSocket[index], playerName, playerNameSize, NULL);
 
-				int bufferLength = (packet.PacketToString().size());
-				send(acceptSocket[index], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
-				std::cout << packet.PacketToString().c_str() << std::endl;
-				send(acceptSocket[index], packet.PacketToString().c_str(), bufferLength, NULL);
-				Sleep(50);
-			}
-			
-			for (int i = 0; i < countClients; i++)
-			{
-				if (i == index)
+				if (packet.getPacketType() == "LetterRequest" || packet.getPacketType() == "WordCheck")
 				{
-					continue;
+					char * playerName = (char*)playersName[index].c_str();
+
+					int playerNameSize = playersName[index].length();
+
+					send(acceptSocket[index], (char*)&playerNameSize, sizeof(int), NULL);
+					send(acceptSocket[index], playerName, playerNameSize, NULL);
+
+					int bufferLength = (packet.PacketToString().size());
+					send(acceptSocket[index], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+					//std::cout << packet.PacketToString().c_str() << std::endl;
+					send(acceptSocket[index], packet.PacketToString().c_str(), bufferLength, NULL);
+					Sleep(50);
 				}
-				else if (clientConnect[i])
+
+				for (int i = 0; i < countClients; i++)
 				{
-					if (packet.getPacketType() == "Letter")
+					if (i == index)
 					{
-						char * playerName = (char*)playersName[index].c_str();
-
-						int playerNameSize = playersName[index].length();
-
-						send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
-						send(acceptSocket[i], playerName, playerNameSize, NULL);
-
-						int bufferLength = (packet.PacketToString().size());
-						send(acceptSocket[i], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
-						//std::cout << packet.PacketToString().c_str() << std::endl;
-						send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
-						Sleep(50);
+						continue;
 					}
-					if ((packet.getPacketType() == "Conversation"))
+					else if (clientConnect[i])
 					{
-						char * playerName = (char*)playersName[index].c_str();
+						if (packet.getPacketType() == "Letter")
+						{
+							char * playerName = (char*)playersName[index].c_str();
 
-						int playerNameSize = playersName[index].length();
+							int playerNameSize = playersName[index].length();
 
-						send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+							send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+							send(acceptSocket[i], playerName, playerNameSize, NULL);
 
-						send(acceptSocket[i], playerName, playerNameSize, NULL);
+							int bufferLength = (packet.PacketToString().size());
+							send(acceptSocket[i], (char *)&bufferLength, sizeof(int), NULL); // wysylanie info o wielkosci
+							//std::cout << packet.PacketToString().c_str() << std::endl;
+							send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+							Sleep(50);
+						}
+						if ((packet.getPacketType() == "Conversation"))
+						{
+							char * playerName = (char*)playersName[index].c_str();
 
-						int bufferLength = (packet.PacketToString().size());
-						send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+							int playerNameSize = playersName[index].length();
 
-						send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+							send(acceptSocket[i], (char*)&playerNameSize, sizeof(int), NULL);
+
+							send(acceptSocket[i], playerName, playerNameSize, NULL);
+
+							int bufferLength = (packet.PacketToString().size());
+							send(acceptSocket[i], (char*)&bufferLength, sizeof(int), NULL);
+
+							send(acceptSocket[i], packet.PacketToString().c_str(), bufferLength, NULL);
+						}
+						//delete[] playerName;
 					}
-					//delete[] playerName;
 				}
+				Sleep(5);
 			}
 		}
 	}
@@ -223,11 +228,23 @@ Packet Serwer::HandleMessage(std::string buffer)
 	}
 	if (packet.getPacketType() == "WordCheck")
 	{
-		if(dictionary->CheckWord(packet.getData()))
-			packet.setData("Correct");
-		else
-			packet.setData("InCorrect");
+		int x = 0;
+		for (int i = 0; i < packet.getData().length(); i++)
+		{
+			if (packet.getData()[i] == '\n')
+			{
+				x = i;
+			}
+		}
+		if (x < packet.getData().length())
+		{
+			if (dictionary->CheckWord(packet.getData()))
+				packet.setData("Correct");
+			else
+				packet.setData("InCorrect");
+		}
 	}
+	
 	return packet;
 }
 void Serwer::Manager(int index)
@@ -250,5 +267,6 @@ void Serwer::Manager(int index)
 		
 		delete[] buffer;
 
+		Sleep(10);
 	}
 }
