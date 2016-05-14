@@ -5,7 +5,7 @@
 
 Dictionary::Dictionary()
 {
-	LoadWords();
+	//LoadWords();
 	std::cout << "SLOWNIK ZALADOWANY" << std::endl;
 }
 void Dictionary::LoadWords()

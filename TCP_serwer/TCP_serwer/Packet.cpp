@@ -37,13 +37,20 @@ Packet Packet::stringToPacket(std::string pack)
 {
 	Packet packet("n", "n");
 	int i = 0;
+	bool good = false;
 	for (; i < pack.length(); i++)
 	{
 		if (pack[i] == '\n')
+		{
+			good = true;
 			break;
+		}
 	}
-	packet.setPacketType(pack.substr(0, i));
-	if(pack.length() > 0)
-		packet.data = pack.substr(i + 1, pack.length());
+	if (good)
+	{
+		packet.setPacketType(pack.substr(0, i));
+		if (pack.length() > 0)
+			packet.data = pack.substr(i + 1, pack.length());
+	}
 	return packet;
 }

@@ -9,8 +9,8 @@ class Word
 public:
 	Word();
 	~Word();
-	int TotalPoints();
-	static Letter allLeters[32]; //probably unnecessary
+
+	//static Letter allLeters[32]; //probably unnecessary
 
 	void addLetter(Letter *);
 	void deleteLetter(Letter *);

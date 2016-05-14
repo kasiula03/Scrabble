@@ -5,5 +5,4 @@ class TasksQueue
 {
 public:
 	std::vector<std::string> buffers;
-
 };

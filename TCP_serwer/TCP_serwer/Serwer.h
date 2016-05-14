@@ -26,6 +26,7 @@ class Serwer
 
 	int letterOccupied[98];
 	int countLetter;
+	int round;
 	
 	bool * clientConnect; 
 	std::thread * clientsThread[4];

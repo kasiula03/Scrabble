@@ -83,8 +83,6 @@ bool Letter::dragAndDrop(sf::RenderWindow * window)
 			sf::FloatRect newRect(static_cast <sf::Vector2f>(window->mapCoordsToPixel(pos)),
 				static_cast <sf::Vector2f>(window->mapCoordsToPixel(size)));
 
-			//cout << Mouse::getPosition().x << " " << Mouse::getPosition().y << endl;
-			//cout << allLeters[0].getPositionX() << " " << allLeters[0].getPositionY() << endl;
 			if (newRect.contains(static_cast <sf::Vector2f>(sf::Mouse::getPosition(*window))))
 				return true;
 			else

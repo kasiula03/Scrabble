@@ -3,16 +3,20 @@ tworzenie slow w pionie i w poziomie.
 
 - uwzglêdniæ, ¿e po dostawieniu liter mo¿e powstaæ kilka s³ów DONE
 
-- dodawanie liter do poczatku i konca slowa
+- dodawanie liter do poczatku i konca slowa DONE
 
 - sprawdzanie czy nowy wyraz laczy sie z jakims (wyjatek tura 1) DONE
 
 - gdy podczas jednego ruchu utworzonych zostanie kilka s³ów, to punkty 
-liczone s¹ za ka¿de s³owo, a wartoœæ punktowa liter wspólnych liczona jest oddzielnie dla ka¿dego wyrazu;
+liczone s¹ za ka¿de s³owo, a wartoœæ punktowa liter wspólnych liczona jest oddzielnie dla ka¿dego wyrazu; DONE
 
 *- ogarniecie innej metody niz przesylanie ciagle vectora
 
-- premia s³owna liczona tylko raz (przy dostawieniu litery juz nie)
+- premia s³owna liczona tylko raz (przy dostawieniu litery juz nie) DONE
 
 
-- synchronizacja dostepnych liter !!!!!!!!!!!
+- synchronizacja dostepnych liter !!!!!!!!!!! DONE
+
+- je¿eli gracz wyjdzie, jego litery musz¹ zostaæ zwolnione
+
+- ustawic ogranicznik, ze gracz nie moze dolaczyc jezeli gra juz sie rozpoczela

@@ -18,4 +18,5 @@ public:
 	void setPacketType(std::string);
 	std::string getPacketType();
 	
+	void showPacket();
 };

@@ -3,15 +3,10 @@
 
 using namespace std;
 
-Letter Word::allLeters[32];
 
 Word::Word()
 {
-	
-	//letters = new Letter[word.length()];
 	this->word = "";
-	//cout << "Total points: " << TotalPoints();
-	
 }
 Word::~Word()
 {
@@ -27,9 +22,6 @@ bool Word::compareTwoLeters(const Letter* lt1, const Letter* lt2)
 void Word::addLetter(Letter * letter)
 {
 	letters.push_back(letter);
-	
-	//this->word += letter.GetSign();
-	//cout << letter.GetSign();
 }
 void Word::deleteLetter(Letter * letter)
 {
@@ -38,7 +30,6 @@ void Word::deleteLetter(Letter * letter)
 		if(letters[i]->id == letter->id)
 		{
 			letters.erase(letters.begin()+i);
-			//cout << "To ta sama";
 		}
 	}
 	
@@ -67,19 +58,4 @@ bool Word::LetterExist(Letter * letter)
 		}
 	}
 	return false;
-}
-int Word::TotalPoints()
-{
-	int total = 0;
-	for (int i = 0; i < word.length(); i++)
-	{
-		int j = 0;
-		while (allLeters[j].GetSign() != word[i])
-		{
-			j++;
-		}
-		total += allLeters[j].GetPoints();
-
-	}
-	return total;
 }

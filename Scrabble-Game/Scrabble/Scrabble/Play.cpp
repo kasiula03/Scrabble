@@ -30,7 +30,7 @@ Play::Play()
 	acceptWord = new Button("Zatwierdz slowo", 1040, 385);
 
 	countTexts = 0;
-	tour = 1;
+	round = 1;
 	countLetter = 0;
 	ourTurn = true;
 	roundOver = false;
@@ -49,10 +49,6 @@ Play::Play()
 
 	wordController = new WordController();
 
-	//Packet pac(Packet::LetterToString(existLetters[0]),"Letter");
-	//cout << pac.PacketToString();
-	//pac = pac.stringToPacket(pac.PacketToString());
-	//cout << pac.StringToLetter(pac.getData());
 }
 
 void Play::PrepareBoard()
@@ -126,33 +122,365 @@ void Play::PrepareBoard()
 	board[9][13].setBonus("LiteraX3");
 }
 
-void Play::RandomLetters()
+void Play::HandleReceivePacket()
 {
-	srand(time(NULL));
-	
-	for (int i = 0; i < 7; i++)
+	Text temp;
+	if (client->taskQueue.buffers.size() > 0 && client->taskQueue.buffers.front().length() > 0)
 	{
-		client->Send ((Packet::stringToPacket("LetterRequest\n")).PacketToString());
-		
-		//Sleep(50);
-			
-			/*
-			if (i + j == 4)
-				break;
-			int k = rand() % 98;
-			while (letterOccupied[k])
+		string tekst = client->taskQueue.buffers.front();
+		client->taskQueue.buffers.erase(client->taskQueue.buffers.begin());
+
+		std::istringstream iss(tekst);
+		string slowo;
+		iss >> slowo;
+		tekst = tekst.substr(slowo.length() + 1, tekst.length());
+		Packet packet = Packet::stringToPacket(tekst);
+		if (packet.getPacketType() == "Letter")
+		{
+			Letter newL = Packet::StringToLetter(packet.getData());
+			allLeters[newL.id].setPosition(newL.getPositionX(), newL.getPositionY());
+			allLeters[newL.id].placed = true;
+			existLetters.push_back(&allLeters[newL.id]);
+			if (GetBoardField(&allLeters[newL.id]) != nullptr)
+				GetBoardField(&allLeters[newL.id])->occupied = true;
+			letterOccupied[newL.id] = true;
+		}
+		else if (packet.getPacketType() == "WordCheck")
+		{
+			if (packet.getData() == "Correct")
+				correctWords = true;
+			else
 			{
-				k = rand() % 98;
+				correctWords = false;
+				cout << "\n PAKIET: ";
+				packet.showPacket();
 			}
-			letterOccupied[k] = true;
-			allLeters[k].setPosition((1070 + i * 40), (300 + j * 40));
-			//allLeters[k].id = countLetter;
+			answer = true;
+		}
+		else if (packet.getPacketType() == "LetterRequest")
+		{
+			int a = atoi(packet.getData().c_str());
+			int x = 0;
+			int y = 0;
+			for (int i = 0; i < existLetters.size(); i++)
+			{
+				if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+				{
+					if (x < 4)
+					{
+						existLetters[i]->setPosition((1070 + x * 40), (300));
+					}
+					else
+					{
+						existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+						y++;
+					}
+					x++;
+				}
+			}
+
+			allLeters[a].setPosition((1070), (300));
+			allLeters[a].placed = false;
+
+
 			countLetter++;
-			existLetters.push_back(&allLeters[k]);
-			*/
-		
+			existLetters.push_back(&allLeters[a]);
+
+			RestartLetters();
+		}
+		else if (packet.getPacketType() == "Conversation")
+		{
+			GlobalFunctions::setText(temp, slowo + " " + packet.getData(), 1000, 450 + (15 * countTexts), 15);
+			conversation.push_back(temp);
+			countTexts++;
+
+			if (conversation.size() > 11)
+			{
+				for (int i = 0; i < conversation.size() - 1; i++)
+				{
+					conversation[i] = conversation[i + 1];
+					conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
+				}
+				conversation.pop_back();
+				this->countTexts--;
+
+			}
+		}
+		else if (packet.getPacketType() == "PlayerLeave")
+		{
+			cout << packet.getData() << endl;
+		}
+		else if (packet.getPacketType() == "GameRound")
+		{
+			round = atoi(packet.getData().c_str());
+			cout << "\nRound" << round << endl;
+		}
 	}
-	//cout << &existLetters << endl;
+}
+
+void Play::Initialize(string playerName)
+{
+	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
+	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
+
+	this->canWrite = false;
+	newWord = new Word();
+
+	GlobalFunctions::setText(textPoints, "0", 10, 0);
+
+	RandomLetters();
+	round = 1;
+	answer = false;
+	waitingForAnswer = false;
+}
+
+void Play::Start(string playerName)
+{
+	Initialize(playerName);
+
+	Event event;
+	bool play = true;
+
+	while (play)
+	{
+		Vector2i mousePos = Mouse::getPosition(*playWindow);
+		HandleReceivePacket();
+		
+		while (playWindow->pollEvent(event)) 
+		{
+			if (Keyboard::isKeyPressed(Keyboard::Escape))
+			{
+				playWindow->close();
+				play = false;
+			}
+
+			LettersUpdate();
+			WriteControl(event);
+			
+			if (roundOver)
+				cout << "\n\n KONIEC" << endl;
+			if (acceptWord->ifMousePressed(playWindow))
+			{
+				AcceptWord();
+				
+				waitingForAnswer = true;
+				
+			}
+			if (waitingForAnswer && answer)
+			{
+				HandleAnswer();
+			}
+		}
+		
+		Display();
+		Sleep(10);
+	}
+	client->Send((new Packet("none", "PlayerLeave"))->PacketToString());
+	exit(0);
+}
+
+void Play::HandleAnswer()
+{
+	if (correctWords)
+	{
+		for (int i = 0; i < newWord->letters.size(); i++)
+		{
+			newWord->letters[i]->placed = true;
+		}
+		addLetterToStand();
+		round++;
+
+		correctWords = false;
+		for (int i = 0; i < newWord->letters.size();i++)
+		{
+			Packet packet(Packet::LetterToString(newWord->letters[i]), "Letter");
+			client->Send(packet.PacketToString());
+			Sleep(20);
+		}
+
+		for (int i = 0; i < wordController->wordForCheck.size();i++)
+		{
+			this->points += wordController->CountPoints(board, &existLetters, wordController->wordForCheck.at(i));
+		}
+		GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
+		newWord->deleteAllLetter();
+	}
+	else
+	{
+		cout << endl << "Przynajmniej jedno ze slow nie ma w slowniku" << endl;
+		RestartLetters();
+		newWord->deleteAllLetter();
+	}
+	waitingForAnswer = false;
+	answer = false;
+	wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
+	Sleep(10);
+}
+
+void Play::AcceptWord()
+{
+	if (newWord->letters.size() > 0)
+	{
+		try
+		{
+			if (wordController->QuickCheck(board, &existLetters, newWord))
+			{
+				cout << "QuickTest: TRUE" << endl;
+				if (round == 1)
+				{
+					if (newWord->letters.size() <= 1)
+					{
+						cout << "\nZA KROTKIE" << endl;
+					}
+					else
+					{
+						wordController->wordForCheck.push_back(newWord);
+					}
+					
+				}
+				if (round > 1)
+				{
+					wordController->SolidTest(board, &existLetters, newWord);
+				}
+				for (int i = 0; i < wordController->wordForCheck.size(); i++)
+				{
+					string word = "";
+					for (int j = 0; j < wordController->wordForCheck.at(i)->letters.size(); j++)
+					{
+						word += wordController->wordForCheck.at(i)->letters[j]->GetSign();
+					}
+					Packet newPack(word+"\n", "WordCheck");
+					client->Send(newPack.PacketToString());
+					Sleep(10);
+				}
+				
+			}
+			else
+				cout << "FALSE" << endl;
+		}
+		catch (string &w)
+		{
+			//Obsluga bledu
+			cout << endl << w << endl;
+			RestartLetters();
+		}
+
+	}
+	if (existLetters.size() >= 98)
+	{
+		if (CheckIfOver())
+			roundOver = true;
+	}
+}
+
+Field * Play::GetBoardField(Letter * letter)
+{
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (letter->getPositionX() == board[i][j].getPositionX() && letter->getPositionY() == board[i][j].getPositionY())
+			{
+				return &board[i][j];
+			}
+		}
+
+	}
+	return nullptr;
+}
+
+bool Play::CheckIfOver()
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void Play::WriteControl(Event & event)
+{
+	if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
+	{
+		if (canWrite)
+			canWrite = false;
+		else
+		{
+			canWrite = true;
+			
+		}
+	}
+
+	if (event.type == sf::Event::TextEntered)
+	{
+		// Handle ASCII characters only
+		if (this->canWrite)
+		{
+			if (event.text.unicode < 128 && event.text.unicode != 13)
+			{
+				str += static_cast<char>(event.text.unicode);
+
+				GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
+
+			}
+		}
+	}
+	if (Keyboard::isKeyPressed(Keyboard::BackSpace) && str.length() > 0)
+	{
+		str.erase(str.length() - 1, str.length());
+		GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
+	}
+	if (str.length() > 0 && (event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
+	{
+		Text temp;
+		conversation.push_back(temp);
+		Packet packet(str+"\n", "Conversation");
+		std::thread sendThread(&Client::Send, &*client, packet.PacketToString());
+		sendThread.join();
+		//client->Send(str);
+		GlobalFunctions::setText(conversation[this->countTexts],"Ja: " + str, 1000, 450 + (15 * countTexts), 15);
+		GlobalFunctions::setText(tempTxt, "", 1000, 620, 15);
+		str = "";
+		this->countTexts++;
+
+		if (conversation.size() > 11)
+		{
+			
+			for (int i = 0; i < conversation.size() - 1; i++)
+			{
+				conversation[i] = conversation[i + 1];
+				conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
+			}
+			conversation.pop_back();
+			this->countTexts--;
+			
+		}
+	}
+}
+
+void Play::Display()
+{
+	playWindow->clear(Color(50, 50, 50, 255));
+	
+	playWindow->draw(Layout);
+	playWindow->draw(Tplayers[0]);
+	playWindow->draw(Tplayers[1]);
+	playWindow->draw(Tplayers[2]);
+	playWindow->draw(Tplayers[3]);
+	playWindow->draw(tempTxt);
+	for (int i = 0; i < conversation.size(); i++)
+		playWindow->draw(conversation[i]);
+	for (int i = 0; i < existLetters.size(); i++)
+		playWindow->draw(*(existLetters[i]));
+
+	playWindow->draw(*acceptWord);
+
+	playWindow->draw(textPoints);
+	
+	playWindow->display();
 }
 
 bool Play::CheckLetter(Letter letter, int & x, int & y)
@@ -173,14 +501,168 @@ bool Play::CheckLetter(Letter letter, int & x, int & y)
 					board[i][j].occupied = true;
 					return true;
 				}
-				
 			}
-			
 		}
 	}
 	return false;
 }
 
+bool Play::CheckIfLetterIs(int x, int y)
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() == x && existLetters[i]->getPositionY() == y)
+			return true;
+	}
+	return false;
+}
+
+void Play::LettersUpdate()
+{
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (ourTurn)
+		{
+			int prev_x = existLetters[i]->getPositionX();
+			int prev_y = existLetters[i]->getPositionY();
+			if (existLetters[i]->dragAndDrop(playWindow))
+			{
+
+				while (Mouse::isButtonPressed(Mouse::Left))
+				{
+					sf::Vector2i pozycjaMyszyWzgledemOkna = sf::Mouse::getPosition(*playWindow);
+					sf::Vector2f pozycjaMyszyNaScenie = playWindow->mapPixelToCoords(pozycjaMyszyWzgledemOkna);
+					int x = pozycjaMyszyNaScenie.x;
+					int y = pozycjaMyszyNaScenie.y;
+					existLetters[i]->setPosition(x, y);
+					Display();
+				}
+				SetLetterPosition(existLetters[i], prev_x, prev_y);
+			}
+		}
+	}
+}
+
+void Play::SetLetterPosition(Letter * letter, int prev_x, int prev_y)
+{
+	int newPosX, newPosY;
+
+	if (CheckLetter(*letter, newPosX, newPosY))
+	{
+		ReleasePreviousField(prev_x, prev_y);
+
+		letter->setPosition(newPosX, newPosY);
+
+		if (!(newWord->LetterExist(letter)))
+			newWord->addLetter(letter);
+	}
+	else
+	{
+		if (prev_x < 1070 && letter->getPositionX() > 1030)
+			SetLetterOnTable(letter, prev_x, prev_y);
+		else
+			letter->setPosition(prev_x, prev_y);
+	}
+}
+
+void Play::ReleasePreviousField(int prev_x, int prev_y)
+{
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (prev_x == board[i][j].getPositionX() && prev_y == board[i][j].getPositionY())
+				board[i][j].occupied = false;
+		}
+	}
+}
+
+void Play::SetLetterOnTable(Letter * letter, int prev_x, int prev_y)
+{
+	for (int j = 0; j < 4; j++)
+	{
+		if (!CheckIfLetterIs(1070 + (j * 40), 300))
+		{
+			letter->setPosition(1070 + (40 * j), 300);
+			newWord->deleteLetter(letter);
+		}
+		else if (!CheckIfLetterIs(1070 + (j * 40), 340) && j != 3)
+		{
+			letter->setPosition(1070 + (40 * j), 340);
+			newWord->deleteLetter(letter);
+		}
+	}
+
+	for (int i = 0; i < 15; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			if (prev_x == board[i][j].getPositionX() && prev_y == board[i][j].getPositionY())
+				board[i][j].occupied = false;
+		}
+
+	}
+}
+
+void Play::RestartLetters()
+{
+	int a = newWord->letters.size();
+	int x = 0;
+	int y = 0;
+	for (int i = 0; i < a; i++)
+	{
+		GetBoardField(newWord->letters[i])->occupied = false;
+	}
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
+		{
+			if (x < 4)
+			{
+				existLetters[i]->setPosition((1070 + x * 40), (300));
+			}
+			else
+			{
+				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+				y++;
+			}
+			x++;
+		}
+	}
+	for (int i = 0; i < a; i++)
+	{
+		if (x < 4)
+		{
+			newWord->letters[i]->setPosition((1070 + x * 40), (300));
+		}
+		else
+		{
+			newWord->letters[i]->setPosition((1070 + y * 40), (340));
+			y++;
+		}
+
+	}
+	newWord->deleteAllLetter();
+}
+
+void Play::addLetterToStand()
+{
+	for (int i = 0; i < newWord->letters.size(); i++)
+	{
+		client->Send((Packet::stringToPacket("LetterRequest\n")).PacketToString());
+	}
+}
+
+void Play::RandomLetters()
+{
+	srand(time(NULL));
+
+	for (int i = 0; i < 7; i++)
+	{
+		client->Send((Packet::stringToPacket("LetterRequest\n")).PacketToString());
+	}
+
+}
 
 void Play::SetLetters()
 {
@@ -316,448 +798,4 @@ void Play::SetLetters()
 	{
 		allLeters[i].id = i;
 	}
-}
-
-void Play::LettersUpdate()
-{
-	for (int i = 0; i < existLetters.size(); i++)
-	{
-		if (ourTurn)
-		{
-			int prev_x = existLetters[i]->getPositionX();
-			int prev_y = existLetters[i]->getPositionY();
-			if (existLetters[i]->dragAndDrop(playWindow))
-			{
-
-				while (Mouse::isButtonPressed(Mouse::Left))
-				{
-					sf::Vector2i pozycjaMyszyWzgledemOkna = sf::Mouse::getPosition(*playWindow);
-					sf::Vector2f pozycjaMyszyNaScenie = playWindow->mapPixelToCoords(pozycjaMyszyWzgledemOkna);
-					int x = pozycjaMyszyNaScenie.x;
-					int y = pozycjaMyszyNaScenie.y;
-					existLetters[i]->setPosition(x, y);
-					Display();
-				}
-				int xx, yy;
-
-				if (CheckLetter(*existLetters[i], xx, yy))
-				{
-					for (int i = 0; i < 15; i++)
-					{
-						for (int j = 0; j < 15; j++)
-						{
-							if (prev_x == board[i][j].getPositionX() && prev_y == board[i][j].getPositionY())
-								board[i][j].occupied = false;
-						}
-
-					}
-					
-					existLetters[i]->setPosition(xx, yy);
-					//existLetters[i]->placed = true;
-					if(!(newWord->LetterExist(existLetters[i])))
-						newWord->addLetter(existLetters[i]);
-				}
-				else
-				{
-					existLetters[i]->setPosition(prev_x, prev_y);
-				}
-			}
-		}
-	}
-}
-void Play::RestartLetters()
-{
-	int a = newWord->letters.size();
-	int x = 0;
-	int y = 0;
-	for (int i = 0; i < a; i++)
-	{
-		GetBoardField(newWord->letters[i])->occupied = false;
-	}
-	for (int i = 0; i < existLetters.size(); i++)
-	{
-		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
-		{
-			if (x < 4)
-			{
-				existLetters[i]->setPosition((1070 + x * 40), (300));
-			}
-			else
-			{
-				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
-				y++;
-			}
-			x++;
-		}
-	}
-	for (int i = 0; i < a; i++)
-	{
-		if (x < 4)
-		{
-			newWord->letters[i]->setPosition((1070 + x * 40), (300));
-		}
-		else
-		{
-			newWord->letters[i]->setPosition((1070 + y * 40), (340));
-			y++;
-		}
-
-	}
-	newWord->deleteAllLetter();
-}
-void Play::addLetterToStand()
-{
-	for (int i = 0; i < newWord->letters.size(); i++)
-	{
-		client->Send((Packet::stringToPacket("LetterRequest\n")).PacketToString());
-		//Sleep(50);
-	}
-}
-void Play::HandleReceivePacket()
-{
-	Text temp;
-	if (client->taskQueue.buffers.size() > 0 && client->taskQueue.buffers.front().length() > 0)
-	{
-		string tekst = client->taskQueue.buffers.front();
-		client->taskQueue.buffers.erase(client->taskQueue.buffers.begin());
-		//cout << tekst << endl;
-		std::istringstream iss(tekst);
-		string slowo;
-		iss >> slowo;
-		tekst = tekst.substr(slowo.length() + 1, tekst.length());
-		Packet packet = Packet::stringToPacket(tekst);
-		//client->messageReceived = false;
-		if (packet.getPacketType() == "Letter")
-		{
-			Letter newL = Packet::StringToLetter(packet.getData());
-			allLeters[newL.id].setPosition(newL.getPositionX(), newL.getPositionY());
-			allLeters[newL.id].placed = true;
-			existLetters.push_back(&allLeters[newL.id]);
-			if (GetBoardField(&allLeters[newL.id]) != nullptr)
-				GetBoardField(&allLeters[newL.id])->occupied = true;
-			letterOccupied[newL.id] = true;
-			//cout << newL.getPositionX() << " " << newL.id << endl;
-		}
-		else if (packet.getPacketType() == "WordCheck")
-		{
-			if (packet.getData() == "Correct")
-				correctWords = true;
-			else
-				correctWords = false;
-			answer = true;
-		}
-		else if (packet.getPacketType() == "LetterRequest")
-		{
-			int a = atoi(packet.getData().c_str());
-			int x = 0;
-			int y = 0;
-			for (int i = 0; i < existLetters.size(); i++)
-			{
-				if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
-				{
-					if (x < 4)
-					{
-						existLetters[i]->setPosition((1070 + x * 40), (300));
-					}
-					else
-					{
-						existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
-						y++;
-					}
-					x++;
-				}
-			}
-
-			allLeters[a].setPosition((1070), (300));
-			allLeters[a].placed = false;
-
-
-			countLetter++;
-			existLetters.push_back(&allLeters[a]);
-
-			RestartLetters();
-		}
-		else if (packet.getPacketType() == "Conversation")
-		{
-			GlobalFunctions::setText(temp, slowo + " " + packet.getData(), 1000, 450 + (15 * countTexts), 15);
-			conversation.push_back(temp);
-			countTexts++;
-
-			if (conversation.size() > 11)
-			{
-				for (int i = 0; i < conversation.size() - 1; i++)
-				{
-					conversation[i] = conversation[i + 1];
-					conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
-				}
-				conversation.pop_back();
-				this->countTexts--;
-
-			}
-		}
-	}
-}
-void Play::Start(string playerName)
-{
-	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
-	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
-	bool play = true;
-	
-	Event event;
-	//allLeters[0].setPosition(240, 30);
-	
-	this->canWrite = false;
-	newWord = new Word();
-	
-	GlobalFunctions::setText(textPoints, "0", 10, 0);
-
-	RandomLetters();
-	tour = 1;
-	answer = false;
-	waitingForAnswer = false;
-	while (play)
-	{
-		Vector2i mousePos = Mouse::getPosition(*playWindow);
-		HandleReceivePacket();
-		
-		while (playWindow->pollEvent(event)) 
-		{
-			if (Keyboard::isKeyPressed(Keyboard::Escape))
-			{
-				playWindow->close();
-				play = false;
-			}
-
-			LettersUpdate();
-			WriteControl(event);
-			
-			if (roundOver)
-				cout << "\n\n KONIEC" << endl;
-			if (acceptWord->ifMousePressed(playWindow))
-			{
-				for (int i = 0; i < existLetters.size(); i++)
-				{
-					cout << existLetters[i]->id << " ";
-				}
-				cout << endl;
-				AcceptWord();
-				
-				waitingForAnswer = true;
-				
-			}
-			if (waitingForAnswer && answer)
-			{
-				if (correctWords)
-				{
-					for (int i = 0; i < newWord->letters.size(); i++)
-					{
-						newWord->letters[i]->placed = true;
-					}
-					addLetterToStand();
-					tour++;
-					
-					correctWords = false;
-					for (int i = 0; i < newWord->letters.size();i++)
-					{
-						Packet packet(Packet::LetterToString(newWord->letters[i]), "Letter");
-						client->Send(packet.PacketToString());
-						Sleep(20);
-					}
-						
-					for (int i = 0; i < wordController->wordForCheck.size();i++)
-					{
-						//to zmienialam ze stringa na word*
-						this->points += wordController->CountPoints(board, &existLetters, wordController->wordForCheck.at(i));
-					}
-					GlobalFunctions::setText(textPoints, to_string(this->points), 10, 0);
-					newWord->deleteAllLetter();
-				}
-				else
-				{
-					cout << endl << "Przynajmniej jedno ze slow nie ma w slowniku" << endl;
-					RestartLetters();
-					newWord->deleteAllLetter();
-				}
-				waitingForAnswer = false;
-				answer = false;
-				wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
-			}
-		}
-		
-		Display();
-		Sleep(10);
-	}
-}
-void Play::AcceptWord()
-{
-	if (newWord->letters.size() > 0)
-	{
-		try
-		{
-			if (wordController->QuickCheck(board, &existLetters, newWord))
-			{
-				cout << "QuickTest: TRUE" << endl;
-				if (tour == 1)
-				{
-					if (newWord->letters.size() <= 1)
-					{
-						cout << "\nZA KROTKIE" << endl;
-					}
-					else
-					{
-						wordController->wordForCheck.push_back(newWord);
-						//cout << "Punkty: " << wordController->CountPoints(board, &existLetters, newWord) << endl;
-						//this->points += wordController->CountPoints(board, &existLetters, newWord);
-					}
-					
-					
-				}
-				if (tour > 1)
-				{
-					wordController->SolidTest(board, &existLetters, newWord);
-
-					//cout << "Punkty: " << wordController->CountPoints(board, newWord);
-				}
-				for (int i = 0; i < wordController->wordForCheck.size(); i++)
-				{
-					string word = "";
-					for (int j = 0; j < wordController->wordForCheck.at(i)->letters.size(); j++)
-					{
-						word += wordController->wordForCheck.at(i)->letters[j]->GetSign();
-					}
-					Packet newPack(word+"\n", "WordCheck");
-					client->Send(newPack.PacketToString());
-					Sleep(10);
-				}
-				
-			}
-			else
-				cout << "FALSE" << endl;
-		}
-		catch (string &w)
-		{
-			//Obsluga bledu
-			cout << endl << w << endl;
-			RestartLetters();
-		}
-		
-
-
-	}
-	if (existLetters.size() >= 98)
-	{
-		if (CheckIfOver())
-			roundOver = true;
-	}
-}
-Field * Play::GetBoardField(Letter * letter)
-{
-	for (int i = 0; i < 15; i++)
-	{
-		for (int j = 0; j < 15; j++)
-		{
-			if (letter->getPositionX() == board[i][j].getPositionX() && letter->getPositionY() == board[i][j].getPositionY())
-			{
-				return &board[i][j];
-			}
-		}
-
-	}
-	return nullptr;
-}
-bool Play::CheckIfOver()
-{
-	for (int i = 0; i < existLetters.size(); i++)
-	{
-		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
-		{
-			return false;
-		}
-	}
-	return true;
-}
-void Play::WriteControl(Event & event)
-{
-	if ((event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
-	{
-		if (canWrite)
-			canWrite = false;
-		else
-		{
-			canWrite = true;
-			
-		}
-	}
-
-	if (event.type == sf::Event::TextEntered)
-	{
-		// Handle ASCII characters only
-		if (this->canWrite)
-		{
-			if (event.text.unicode < 128 && event.text.unicode != 13)
-			{
-				str += static_cast<char>(event.text.unicode);
-
-				GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
-
-			}
-		}
-	}
-	if (Keyboard::isKeyPressed(Keyboard::BackSpace) && str.length() > 0)
-	{
-		str.erase(str.length() - 1, str.length());
-		GlobalFunctions::setText(tempTxt, str, 1000, 620, 15);
-	}
-	if (str.length() > 0 && (event.type == sf::Event::KeyPressed) && (event.key.code == sf::Keyboard::Return))
-	{
-		Text temp;
-		conversation.push_back(temp);
-		Packet packet(str+"\n", "Conversation");
-		std::thread sendThread(&Client::Send, &*client, packet.PacketToString());
-		sendThread.join();
-		//client->Send(str);
-		GlobalFunctions::setText(conversation[this->countTexts],"Ja: " + str, 1000, 450 + (15 * countTexts), 15);
-		GlobalFunctions::setText(tempTxt, "", 1000, 620, 15);
-		str = "";
-		this->countTexts++;
-
-		if (conversation.size() > 11)
-		{
-			
-			for (int i = 0; i < conversation.size() - 1; i++)
-			{
-				conversation[i] = conversation[i + 1];
-				conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
-			}
-			conversation.pop_back();
-			this->countTexts--;
-			
-		}
-	}
-}
-void Play::Display()
-{
-	playWindow->clear(Color(50, 50, 50, 255));
-	
-	playWindow->draw(Layout);
-	playWindow->draw(Tplayers[0]);
-	playWindow->draw(Tplayers[1]);
-	playWindow->draw(Tplayers[2]);
-	playWindow->draw(Tplayers[3]);
-	playWindow->draw(tempTxt);
-	for (int i = 0; i < conversation.size(); i++)
-		playWindow->draw(conversation[i]);
-	for (int i = 0; i < existLetters.size(); i++)
-		playWindow->draw(*(existLetters[i]));
-
-	playWindow->draw(*acceptWord);
-
-	playWindow->draw(textPoints);
-	/*for (int i = 0; i < 15; i++)
-	{
-		for (int j = 0; j < 15; j++)
-			playWindow->draw(board[i][j]);
-	}*/
-	
-	playWindow->display();
 }

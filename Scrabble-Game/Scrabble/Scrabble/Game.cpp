@@ -32,44 +32,6 @@ Game::Game(int a)
 	gameThread = new thread(*this); 
 	gameThread->join();
 
-
-	
-}
-
-void Game::SetLetters()
-{
-	Word::allLeters[0] = Letter('A', 1);
-	Word::allLeters[1] = Letter('•', 5);
-	Word::allLeters[2] = Letter('B', 3);
-	Word::allLeters[3] = Letter('C', 6);
-	Word::allLeters[4] = Letter('∆', 6);
-	Word::allLeters[5] = Letter('D', 2);
-	Word::allLeters[6] = Letter('E', 1);
-	Word::allLeters[7] = Letter(' ', 5);
-	Word::allLeters[8] = Letter('F', 5);
-	Word::allLeters[9] = Letter('G', 3);
-	Word::allLeters[10] = Letter('H', 3);
-	Word::allLeters[11] = Letter('I', 1);
-	Word::allLeters[12] = Letter('J', 3);
-	Word::allLeters[13] = Letter('K', 2);
-	Word::allLeters[14] = Letter('L', 2);
-	Word::allLeters[15] = Letter('£', 3);
-	Word::allLeters[16] = Letter('M', 2);
-	Word::allLeters[17] = Letter('N', 1);
-	Word::allLeters[18] = Letter('—', 7);
-	Word::allLeters[19] = Letter('O', 1);
-	Word::allLeters[20] = Letter('”', 5);
-	Word::allLeters[21] = Letter('P', 2);
-	Word::allLeters[22] = Letter('R', 1);
-	Word::allLeters[23] = Letter('S', 1);
-	Word::allLeters[24] = Letter('å', 5);
-	Word::allLeters[25] = Letter('T', 2);
-	Word::allLeters[26] = Letter('U', 3);
-	Word::allLeters[27] = Letter('W', 1);
-	Word::allLeters[28] = Letter('Y', 2);
-	Word::allLeters[29] = Letter('Z', 1);
-	Word::allLeters[30] = Letter('è', 9);
-	Word::allLeters[31] = Letter('Ø', 5);
 }
 
 void Game::RunGame()
@@ -158,23 +120,6 @@ void Game::Menu()
 					MessageBox(NULL, "Nie udalo polaczyc sie z serwerem", "ERROR", NULL);
 				}
 			}
-
-			
-			
-			/*if (event.type == sf::Event::TextEntered)
-			{
-				// Handle ASCII characters only
-				if (event.text.unicode < 128)
-				{
-					str += static_cast<char>(event.text.unicode);
-					texts[1].setString(str);
-				}
-			}
-			if (Keyboard::isKeyPressed(Keyboard::BackSpace) && str.length() > 0)
-			{
-				str.erase(str.length() - 1, str.length());
-				texts[1].setString(str.c_str());
-			}*/ 
 
 		}
 		

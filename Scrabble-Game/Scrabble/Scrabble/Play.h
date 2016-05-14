@@ -42,7 +42,7 @@ protected:
 	Word * newWord;
 	WordController * wordController;
 
-	int tour;
+	int round;
 	int points;
 
 	Button * acceptWord;
@@ -55,22 +55,33 @@ protected:
 	bool waitingForAnswer;
 	bool answer;
 
+	void Initialize(string playerName);
 	void Start(string playerName);
-	void RandomLetters();
-	bool CheckLetter(Letter letter, int & x, int & y);
-	void addLetterToStand();
+	
 	bool CheckIfOver();
-	void RestartLetters();
+
 	void HandleReceivePacket();
 
 	void AcceptWord();
-	void LettersUpdate();
 	void WriteControl(Event &);
+	void HandleAnswer();
 
 	Field * GetBoardField(Letter * letter);
 
-	void PrepareBoard();
+	void LettersUpdate();
+	bool CheckLetter(Letter letter, int & x, int & y);
+	bool CheckIfLetterIs(int x, int y);
+	void ReleasePreviousField(int prev_x, int prev_y);
+	void SetLetterPosition(Letter * letter, int prev_x, int prev_y);
+	void SetLetterOnTable(Letter * letter, int prev_x, int prev_y);
+	void RestartLetters();
+	void addLetterToStand();
+	void RandomLetters();
 	void SetLetters();
+
+	void PrepareBoard();
+	
+
 	void Display();
 
 };

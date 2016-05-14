@@ -25,7 +25,6 @@ private:
 	Client * client;
 
 	thread * gameThread; // Watek gry
-	//thread * clientThreadSend; // Watek klienta wysylanie
 	thread * clientThreadRecv;
 
 	static Font font;
@@ -43,7 +42,6 @@ private:
 	Button gameButton;
 	
 	Text texts[4];
-	void SetLetters();
 
 	//main game functions
 	void Inatialize();

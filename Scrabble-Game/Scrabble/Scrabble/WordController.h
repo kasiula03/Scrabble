@@ -25,6 +25,5 @@ public:
 private:
 	bool horizontal;
 	bool vertical;
-	//vector <Letter*>* existLetters;
 
 };
