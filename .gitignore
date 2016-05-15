@@ -38,3 +38,8 @@
 *.exe
 *.out
 *.app
+
+*.jpeg
+*.png
+
+Slownik.txt
