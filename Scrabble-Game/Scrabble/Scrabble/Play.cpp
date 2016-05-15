@@ -22,17 +22,19 @@ Play::Play()
 	}
 	Layout.setTexture(texture);
 	
-	GlobalFunctions::setText(Tplayers[0], "Brak", 1060, 150);
-	GlobalFunctions::setText(Tplayers[1], "Brak", 1190, 150);
-	GlobalFunctions::setText(Tplayers[2], "Brak", 1060, 215);
-	GlobalFunctions::setText(Tplayers[3], "Brak", 1190, 215);
+	GlobalFunctions::setText(Tplayers[0], "Brak", 1060, 155, 18);
+	GlobalFunctions::setText(Tplayers[1], "Brak", 1190, 155, 18);
+	GlobalFunctions::setText(Tplayers[2], "Brak", 1060, 220, 18);
+	GlobalFunctions::setText(Tplayers[3], "Brak", 1190, 220, 18);
+
+	GlobalFunctions::setText(WhosRoundTxt, "Twoja tura", 400, 630);
 
 	acceptWord = new Button("Zatwierdz slowo", 1040, 385);
 
 	countTexts = 0;
 	round = 1;
 	countLetter = 0;
-	ourTurn = true;
+	youTurn = true;
 	roundOver = false;
 	this->canWrite = false;
 	SetLetters();
@@ -46,7 +48,11 @@ Play::Play()
 	{
 		letterOccupied[i] = false;
 	}
-
+	for (int i = 0; i < 4; i++)
+	{
+		playerConnected[i] = false;
+	}
+	playerConnected[0] = true;
 	wordController = new WordController();
 
 }
@@ -124,104 +130,151 @@ void Play::PrepareBoard()
 
 void Play::HandleReceivePacket()
 {
-	Text temp;
 	if (client->taskQueue.buffers.size() > 0 && client->taskQueue.buffers.front().length() > 0)
 	{
 		string tekst = client->taskQueue.buffers.front();
 		client->taskQueue.buffers.erase(client->taskQueue.buffers.begin());
 
 		std::istringstream iss(tekst);
-		string slowo;
-		iss >> slowo;
-		tekst = tekst.substr(slowo.length() + 1, tekst.length());
+		string playerName;
+		iss >> playerName;
+		tekst = tekst.substr(playerName.length() + 1, tekst.length());
 		Packet packet = Packet::stringToPacket(tekst);
-		if (packet.getPacketType() == "Letter")
-		{
-			Letter newL = Packet::StringToLetter(packet.getData());
-			allLeters[newL.id].setPosition(newL.getPositionX(), newL.getPositionY());
-			allLeters[newL.id].placed = true;
-			existLetters.push_back(&allLeters[newL.id]);
-			if (GetBoardField(&allLeters[newL.id]) != nullptr)
-				GetBoardField(&allLeters[newL.id])->occupied = true;
-			letterOccupied[newL.id] = true;
-		}
+
+		if (packet.getPacketType() == "YourName")
+			Tplayers[0].setString(packet.getData().substr(0, packet.getData().length() - 2));
+		else if (packet.getPacketType() == "PlayerRound")
+			HandlePacketPlayRound(packet);
+		else if (packet.getPacketType() == "PlayerJoin")
+			HandlePacketPlayerJoin(packet);
+		else if (packet.getPacketType() == "Letter")
+			HandlePacketLetter(packet);
 		else if (packet.getPacketType() == "WordCheck")
+			HandlePacketWordCheck(packet);
+		else if (packet.getPacketType() == "LetterRequest")
+			HandlePacketLetterRequest(packet);
+		else if (packet.getPacketType() == "Conversation")
+			HandlePacketConversation(packet, playerName);
+		else if (packet.getPacketType() == "PlayerLeave")
+			HandlePacketPlayerLeave(packet);
+		else if (packet.getPacketType() == "GameRound")
+			round = atoi(packet.getData().c_str());
+		
+	}
+}
+
+void Play::HandlePacketPlayRound(Packet & packet)
+{
+	string playerName = packet.getData().substr(0, packet.getData().length() - 2);
+	if (playerName == Tplayers[0].getString())
+	{
+		WhosRoundTxt.setString("Twoja tura");
+		youTurn = true;
+	}
+	else
+	{
+		WhosRoundTxt.setString("Tura gracza " + playerName);
+		youTurn = false;
+	}
+}
+
+void Play::HandlePacketPlayerJoin(Packet & packet)
+{
+	int i = 0;
+	std::string name = packet.getData().substr(0, packet.getData().length() - 2);
+	while (playerConnected[i])
+		i++;
+	playerConnected[i] = true;
+	Tplayers[i].setString(name);
+}
+
+void Play::HandlePacketLetter(Packet & packet)
+{
+	Letter newL = Packet::StringToLetter(packet.getData());
+	allLeters[newL.id].setPosition(newL.getPositionX(), newL.getPositionY());
+	allLeters[newL.id].placed = true;
+	existLetters.push_back(&allLeters[newL.id]);
+	if (GetBoardField(&allLeters[newL.id]) != nullptr)
+		GetBoardField(&allLeters[newL.id])->occupied = true;
+	letterOccupied[newL.id] = true;
+}
+
+void Play::HandlePacketWordCheck(Packet & packet)
+{
+	if (packet.getData() == "Correct")
+		correctWords = true;
+	else
+	{
+		correctWords = false;
+		cout << "\n PAKIET: ";
+		packet.showPacket();
+	}
+	answer = true;
+}
+
+void Play::HandlePacketLetterRequest(Packet & packet)
+{
+	int a = atoi(packet.getData().c_str());
+	int x = 0;
+	int y = 0;
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
 		{
-			if (packet.getData() == "Correct")
-				correctWords = true;
+			if (x < 4)
+				existLetters[i]->setPosition((1070 + x * 40), (300));
 			else
 			{
-				correctWords = false;
-				cout << "\n PAKIET: ";
-				packet.showPacket();
+				existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
+				y++;
 			}
-			answer = true;
-		}
-		else if (packet.getPacketType() == "LetterRequest")
-		{
-			int a = atoi(packet.getData().c_str());
-			int x = 0;
-			int y = 0;
-			for (int i = 0; i < existLetters.size(); i++)
-			{
-				if (existLetters[i]->getPositionX() >= 1070 && existLetters[i]->getPositionY() >= 300)
-				{
-					if (x < 4)
-					{
-						existLetters[i]->setPosition((1070 + x * 40), (300));
-					}
-					else
-					{
-						existLetters[i]->setPosition((1070 + y * 40), (300 + 40));
-						y++;
-					}
-					x++;
-				}
-			}
-
-			allLeters[a].setPosition((1070), (300));
-			allLeters[a].placed = false;
-
-
-			countLetter++;
-			existLetters.push_back(&allLeters[a]);
-
-			RestartLetters();
-		}
-		else if (packet.getPacketType() == "Conversation")
-		{
-			GlobalFunctions::setText(temp, slowo + " " + packet.getData(), 1000, 450 + (15 * countTexts), 15);
-			conversation.push_back(temp);
-			countTexts++;
-
-			if (conversation.size() > 11)
-			{
-				for (int i = 0; i < conversation.size() - 1; i++)
-				{
-					conversation[i] = conversation[i + 1];
-					conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
-				}
-				conversation.pop_back();
-				this->countTexts--;
-
-			}
-		}
-		else if (packet.getPacketType() == "PlayerLeave")
-		{
-			cout << packet.getData() << endl;
-		}
-		else if (packet.getPacketType() == "GameRound")
-		{
-			round = atoi(packet.getData().c_str());
-			cout << "\nRound" << round << endl;
+			x++;
 		}
 	}
+	allLeters[a].setPosition((1070), (300));
+	allLeters[a].placed = false;
+	countLetter++;
+	existLetters.push_back(&allLeters[a]);
+
+	RestartLetters();
+}
+
+void Play::HandlePacketConversation(Packet & packet, string playerName)
+{
+	Text temp;
+	GlobalFunctions::setText(temp, playerName + " " + packet.getData(), 1000, 450 + (15 * countTexts), 15);
+	conversation.push_back(temp);
+	countTexts++;
+
+	if (conversation.size() > 11)
+	{
+		for (int i = 0; i < conversation.size() - 1; i++)
+		{
+			conversation[i] = conversation[i + 1];
+			conversation[i].setPosition(conversation[i].getPosition().x, conversation[i].getPosition().y - 15);
+		}
+		conversation.pop_back();
+		this->countTexts--;
+	}
+}
+
+void Play::HandlePacketPlayerLeave(Packet & packet)
+{
+	std::string name = packet.getData().substr(0, packet.getData().length() - 2);
+	int i = 0;
+	while (Tplayers[i].getString() != name)
+	{
+		i++;
+	}
+	Tplayers[i].setString("Brak");
+	playerConnected[i] = false;
+	cout << packet.getData() << endl;
 }
 
 void Play::Initialize(string playerName)
 {
-	playWindow = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
-	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 150, 25);
+	playWindow = new RenderWindow(VideoMode(1366, 768), "Katarzyna Nalepka Scrabble", Style::Default);
+	GlobalFunctions::setText(Tplayers[0], playerName, 1060, 155, 18);
 
 	this->canWrite = false;
 	newWord = new Word();
@@ -241,6 +294,8 @@ void Play::Start(string playerName)
 	Event event;
 	bool play = true;
 
+	client->Send((new Packet(playerName, "PlayerJoin"))->PacketToString());
+
 	while (play)
 	{
 		Vector2i mousePos = Mouse::getPosition(*playWindow);
@@ -254,28 +309,42 @@ void Play::Start(string playerName)
 				play = false;
 			}
 
-			LettersUpdate();
 			WriteControl(event);
-			
+
 			if (roundOver)
 				cout << "\n\n KONIEC" << endl;
-			if (acceptWord->ifMousePressed(playWindow))
+
+			if (youTurn)
 			{
-				AcceptWord();
-				
-				waitingForAnswer = true;
-				
+				LettersUpdate();
+
+				if (acceptWord->ifMousePressed(playWindow))
+				{
+					AcceptWord();
+
+					waitingForAnswer = true;
+
+				}
 			}
 			if (waitingForAnswer && answer)
 			{
 				HandleAnswer();
 			}
+			
 		}
 		
 		Display();
 		Sleep(10);
 	}
 	client->Send((new Packet("none", "PlayerLeave"))->PacketToString());
+	for (int i = 0; i < existLetters.size(); i++)
+	{
+		if (!existLetters[i]->placed)
+		{
+			client->Send((new Packet(Packet::LetterToString(existLetters[i]), "LetterRelease"))->PacketToString());
+		}
+	}
+	client->CloseConnection();
 	exit(0);
 }
 
@@ -314,6 +383,7 @@ void Play::HandleAnswer()
 	waitingForAnswer = false;
 	answer = false;
 	wordController->wordForCheck.erase(wordController->wordForCheck.begin(), wordController->wordForCheck.end());
+	
 	Sleep(10);
 }
 
@@ -366,6 +436,7 @@ void Play::AcceptWord()
 		}
 
 	}
+
 	if (existLetters.size() >= 98)
 	{
 		if (CheckIfOver())
@@ -441,7 +512,7 @@ void Play::WriteControl(Event & event)
 		std::thread sendThread(&Client::Send, &*client, packet.PacketToString());
 		sendThread.join();
 		//client->Send(str);
-		GlobalFunctions::setText(conversation[this->countTexts],"Ja: " + str, 1000, 450 + (15 * countTexts), 15);
+		GlobalFunctions::setText(conversation[this->countTexts],"Ty: " + str, 1000, 450 + (15 * countTexts), 15);
 		GlobalFunctions::setText(tempTxt, "", 1000, 620, 15);
 		str = "";
 		this->countTexts++;
@@ -477,7 +548,7 @@ void Play::Display()
 		playWindow->draw(*(existLetters[i]));
 
 	playWindow->draw(*acceptWord);
-
+	playWindow->draw(WhosRoundTxt);
 	playWindow->draw(textPoints);
 	
 	playWindow->display();
@@ -521,7 +592,7 @@ void Play::LettersUpdate()
 {
 	for (int i = 0; i < existLetters.size(); i++)
 	{
-		if (ourTurn)
+		if (youTurn)
 		{
 			int prev_x = existLetters[i]->getPositionX();
 			int prev_y = existLetters[i]->getPositionY();

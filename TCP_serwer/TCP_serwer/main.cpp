@@ -5,7 +5,6 @@ using namespace std;
 
 int main()
 {
-
 	Serwer serwer;
 	
 	//thread watekOdbierania1(std::ref(serwer), "Odbieranie",0);

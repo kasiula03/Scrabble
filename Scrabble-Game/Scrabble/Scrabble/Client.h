@@ -19,6 +19,7 @@ public:
 	void Listen(); // thread function
 	void Receive();
 	bool CheckIfConnected(); // check if our client is connected with server
+	void CloseConnection();
 
 	string getReceivedMessage();
 

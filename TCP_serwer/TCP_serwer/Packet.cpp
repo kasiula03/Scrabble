@@ -1,4 +1,5 @@
 #include "Packet.h"
+#include <sstream>
 
 using namespace std;
 
@@ -53,4 +54,24 @@ Packet Packet::stringToPacket(std::string pack)
 			packet.data = pack.substr(i + 1, pack.length());
 	}
 	return packet;
+}
+string Packet::LetterToString(Letter * letter)
+{
+	string tempData;
+	tempData += to_string(letter->pos_x) + " " + to_string(letter->pos_y);
+	tempData += " " + to_string(letter->id);
+	return tempData;
+}
+Letter Packet::StringToLetter(std::string str)
+{
+	std::istringstream iss(str);
+	Letter temp;
+	string slowo;
+	iss >> slowo;
+	temp.pos_x = atoi(slowo.c_str());
+	iss >> slowo;
+	temp.pos_y = atoi(slowo.c_str());
+	iss >> slowo;
+	temp.id = atoi(slowo.c_str());
+	return temp;
 }

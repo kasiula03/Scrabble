@@ -96,6 +96,10 @@ void Client::Listen()
 		}
 	}
 }
+void Client::CloseConnection()
+{
+	closesocket(mainSocket);
+}
 void Client::Receive()
 {
 	

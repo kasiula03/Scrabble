@@ -4,45 +4,49 @@
 
 #include <WinSock2.h>
 #include <cstdio>
-#include <cstdlib>
 #include <string>
 #include <Windows.h>
 #include <iostream>
 #include <thread>
-#include "Packet.h"
-#include "TasksQueue.h"
-#include "Dictionary.h"
+#include "PacketHandler.h"
+
 
 class Serwer
 {
 	SOCKET mainSocket;
 	sockaddr_in service;
 	static SOCKET acceptSocket[4];
-	static std::string playersName[4];
+	
 
 	bool sendMessage;
 
-	static int countClients;
-
-	int letterOccupied[98];
-	int countLetter;
-	int round;
-	
 	bool * clientConnect; 
 	std::thread * clientsThread[4];
 
-	Dictionary * dictionary;
-	TasksQueue sendQueue;
+	
 	Packet packet;
 public:
 	
 	Serwer();
 
+	static std::string playersName[4];
+	static int countClients;
+	bool letterOccupied[98];
+	Letter letterExists[98];
+
+	bool ifLetterOnBoard[98];
+	Letter letterOnBoard[98];
+	int countLetter;
+	int round;
+
+	void Register(std::string login, std::string password);
+	bool Login(std::string login, std::string password);
 	void CreateSerwer(); 
 	void AcceptClient();
-	void Manager(int index);
-	void Receive();
+	void ManagerSingleClient(int index);
 	void Send(); 
+	void SendMessageToClient(int index, Packet packet);
+	void SendMessageToClient(int index, int who, Packet packet);
 
-	Packet HandleMessage(std::string);
+	PacketHandler * packetHandler;
 };

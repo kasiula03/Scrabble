@@ -12,6 +12,8 @@ Game::Game(int a)
 {
 	client = new Client();
 	Play::client = this->client;
+	Register::client = this->client;
+	Login::client = this->client;
 	
 	SetLetters();
 	GlobalFunctions::GlobalFunctions();
@@ -27,7 +29,7 @@ Game::Game(int a)
 	}
 	menuBackground.setTexture(menuTexture);
 
-	this->playerName = "Guest";
+	this->playerName = "You";
 
 	gameThread = new thread(*this); 
 	gameThread->join();
@@ -64,7 +66,6 @@ void Game::Menu()
 	
 	Inatialize();
 
-	
 	while (menu)
 	{
 		Vector2f mouse(Mouse::getPosition());
@@ -145,6 +146,8 @@ void Game::Authorization()
 
 	this->playerName = runLoginWindow();
 
+	Packet packet(playerName + "\n", "PlayerName");
+	client->Send(packet.PacketToString());
 	state = MENU;
 	Sleep(200);
 }
@@ -161,7 +164,7 @@ void Game::Register()
 
 void Game::Inatialize()
 {
-	window = new RenderWindow(VideoMode(1366, 768), "Scrabble multiplayer", Style::Default);
+	window = new RenderWindow(VideoMode(1366, 768), "Katarzyna Nalepka Scrabble", Style::Default);
 
 	scrabbleButton = Button("Scrabble", window->getSize().x / 2.5, 10, 56);
 	loginButton = Button("Zaloguj sie", 1170, 300);

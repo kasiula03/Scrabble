@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-
+#include "Letter.h"
 class Packet
 {
 	std::string data;
@@ -15,5 +15,6 @@ public:
 	void setData(std::string);
 	void setPacketType(std::string);
 	std::string getPacketType();
-
+	static std::string LetterToString(Letter * letter);
+	static Letter StringToLetter(std::string str);
 };

@@ -25,9 +25,11 @@ protected:
 	Sprite Layout;
 	Texture texture;
 	Text Tplayers[4];
+	bool playerConnected[4];
 
 	Text tempTxt;
 	Text textPoints;
+	Text WhosRoundTxt;
 
 	vector<Text> conversation;
 	int countTexts;
@@ -48,7 +50,7 @@ protected:
 	Button * acceptWord;
 	string str;
 
-	bool ourTurn;
+	bool youTurn;
 	bool canWrite;
 	bool roundOver;
 	bool correctWords;
@@ -67,6 +69,14 @@ protected:
 	void HandleAnswer();
 
 	Field * GetBoardField(Letter * letter);
+
+	void HandlePacketPlayRound(Packet & packet);
+	void HandlePacketPlayerJoin(Packet & packet);
+	void HandlePacketLetter(Packet & packet);
+	void HandlePacketWordCheck(Packet & packet);
+	void HandlePacketLetterRequest(Packet & packet);
+	void HandlePacketConversation(Packet & packet, std::string playerName);
+	void HandlePacketPlayerLeave(Packet & packet);
 
 	void LettersUpdate();
 	bool CheckLetter(Letter letter, int & x, int & y);
